@@ -52,6 +52,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/services', function () {
         return view('dashboard.services');
     })->name('dashboard.services');
+
+    // ===== مسارات التقييمات (للمستخدمين المسجلين فقط) =====
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::put('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
+    Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
 
 // مسارات البحث
@@ -61,3 +66,6 @@ Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->nam
 // مسارات الجهات والخدمات
 Route::get('/governments/{id}', [GovernmentController::class, 'show'])->name('governments.show');
 Route::get('/services/{id}', [OfferServiceController::class, 'show'])->name('services.show');
+
+// ===== مسارات التقييمات (للجميع - لعرض التقييمات) =====
+Route::get('/governments/{id}/reviews', [ReviewController::class, 'getReviews'])->name('reviews.get');

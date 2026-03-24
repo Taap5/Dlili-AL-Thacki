@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Government;
 use App\Models\OfferService;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -34,18 +35,15 @@ class FavoriteController extends Controller
             $exists = $user->favoriteGovernments()->where('government_id', $governmentId)->exists();
 
             if ($exists) {
-                // إذا كانت موجودة، قم بإزالتها
                 $user->favoriteGovernments()->detach($governmentId);
                 $isFavorited = false;
                 $message = 'تم الإزالة من المفضلة';
             } else {
-                // إذا لم تكن موجودة، قم بإضافتها
                 $user->favoriteGovernments()->attach($governmentId);
                 $isFavorited = true;
                 $message = 'تم الإضافة إلى المفضلة';
             }
 
-            // تعديل الشرط ليشمل wantsJson
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
@@ -83,18 +81,15 @@ class FavoriteController extends Controller
             $exists = $user->favoriteServices()->where('service_id', $serviceId)->exists();
 
             if ($exists) {
-                // إذا كانت موجودة، قم بإزالتها
                 $user->favoriteServices()->detach($serviceId);
                 $isFavorited = false;
                 $message = 'تم الإزالة من المفضلة';
             } else {
-                // إذا لم تكن موجودة، قم بإضافتها
                 $user->favoriteServices()->attach($serviceId);
                 $isFavorited = true;
                 $message = 'تم الإضافة إلى المفضلة';
             }
 
-            // تعديل الشرط ليشمل wantsJson
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
