@@ -2,63 +2,118 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Favorite;
-use App\Models\User;
 use App\Models\Government;
+use App\Models\OfferService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
+    // عرض صفحة المفضلة
     public function index()
     {
-        $favorites = Favorite::with(['user', 'government'])->get();
-        return view('favorites.index', compact('favorites'));
+        $user = Auth::user();
+        $governments = $user->favoriteGovernments;
+        $services = $user->favoriteServices;
+
+        return view('profile.favorites', compact('governments', 'services'));
     }
 
-    public function create()
+    // تبديل حالة المفضلة للجهات
+    public function toggleGovernment(Request $request)
     {
-        $users = User::all();
-        $governments = Government::all();
-        return view('favorites.create', compact('users', 'governments'));
+        try {
+            $request->validate([
+                'government_id' => 'required|exists:governments,id',
+            ]);
+
+            $user = Auth::user();
+            $governmentId = $request->government_id;
+
+            // التحقق إذا كانت الجهة مفضلة بالفعل
+            $exists = $user->favoriteGovernments()->where('government_id', $governmentId)->exists();
+
+            if ($exists) {
+                // إذا كانت موجودة، قم بإزالتها
+                $user->favoriteGovernments()->detach($governmentId);
+                $isFavorited = false;
+                $message = 'تم الإزالة من المفضلة';
+            } else {
+                // إذا لم تكن موجودة، قم بإضافتها
+                $user->favoriteGovernments()->attach($governmentId);
+                $isFavorited = true;
+                $message = 'تم الإضافة إلى المفضلة';
+            }
+
+            // تعديل الشرط ليشمل wantsJson
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'is_favorited' => $isFavorited,
+                    'message' => $message,
+                    'type' => 'government'
+                ]);
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'حدث خطأ');
+        }
     }
 
-    public function store(Request $request)
+    // تبديل حالة المفضلة للخدمات
+    public function toggleService(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'government_id' => 'required|exists:governments,id',
-        ]);
+        try {
+            $request->validate([
+                'service_id' => 'required|exists:offer_services,id',
+            ]);
 
-        Favorite::create($request->all());
+            $user = Auth::user();
+            $serviceId = $request->service_id;
 
-        return redirect()->route('favorites.index')->with('success', 'Favorite added successfully');
-    }
+            // التحقق إذا كانت الخدمة مفضلة بالفعل
+            $exists = $user->favoriteServices()->where('service_id', $serviceId)->exists();
 
-    public function edit($id)
-    {
-        $favorite = Favorite::findOrFail($id);
-        $users = User::all();
-        $governments = Government::all();
-        return view('favorites.edit', compact('favorite', 'users', 'governments'));
-    }
+            if ($exists) {
+                // إذا كانت موجودة، قم بإزالتها
+                $user->favoriteServices()->detach($serviceId);
+                $isFavorited = false;
+                $message = 'تم الإزالة من المفضلة';
+            } else {
+                // إذا لم تكن موجودة، قم بإضافتها
+                $user->favoriteServices()->attach($serviceId);
+                $isFavorited = true;
+                $message = 'تم الإضافة إلى المفضلة';
+            }
 
-    public function update(Request $request, $id)
-    {
-        $favorite = Favorite::findOrFail($id);
+            // تعديل الشرط ليشمل wantsJson
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'is_favorited' => $isFavorited,
+                    'message' => $message,
+                    'type' => 'service'
+                ]);
+            }
 
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'government_id' => 'required|exists:governments,id',
-        ]);
+            return back()->with('success', $message);
 
-        $favorite->update($request->all());
-
-        return redirect()->route('favorites.index')->with('success', 'Favorite updated successfully');
-    }
-
-    public function destroy($id)
-    {
-        Favorite::destroy($id);
-        return redirect()->route('favorites.index')->with('success', 'Favorite deleted successfully');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'حدث خطأ');
+        }
     }
 }

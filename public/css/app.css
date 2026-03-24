@@ -1397,3 +1397,457 @@ main {
 
 /* ===== نهاية الكود ===== */
 
+/* ===== تحسينات صفحة عرض الجهات ===== */
+
+/* بطاقة الجهة الرئيسية */
+.main-government-card {
+    border-radius: 24px !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.main-government-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 35px -12px rgba(47, 62, 158, 0.2) !important;
+}
+
+/* اسم الجهة مع شريط جانبي */
+.government-name-wrapper {
+    position: relative;
+    padding-right: 20px;
+    margin-bottom: 1rem;
+}
+
+.government-name-wrapper::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
+    border-radius: 4px;
+}
+
+.government-name {
+    font-weight: 800;
+    font-size: 1.75rem;
+    color: #1a2c3e;
+    margin-bottom: 0.25rem;
+}
+
+/* كروت المعلومات */
+.info-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+.info-pill i {
+    margin-left: 6px;
+    color: #2f3e9e;
+}
+
+.info-pill:hover {
+    background: #e8eaf6;
+    color: #2f3e9e;
+    transform: translateY(-2px);
+}
+
+/* معرض الصور */
+.images-strip-container {
+    position: relative;
+}
+
+.images-strip {
+    scrollbar-width: thin;
+    scrollbar-color: #2f3e9e #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.images-strip::-webkit-scrollbar {
+    height: 5px;
+}
+
+.images-strip::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+
+.images-strip::-webkit-scrollbar-thumb {
+    background: #2f3e9e;
+    border-radius: 10px;
+}
+
+.gov-thumb {
+    width: 100px;
+    height: 75px;
+    object-fit: cover;
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+}
+
+.gov-thumb:hover {
+    transform: scale(1.05);
+    border-color: #2f3e9e;
+    box-shadow: 0 8px 20px rgba(47, 62, 158, 0.2);
+}
+
+.scroll-hint {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.95);
+    padding: 8px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    color: #2f3e9e;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    white-space: nowrap;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.images-strip-container:hover .scroll-hint {
+    opacity: 0;
+}
+
+/* الأكورديون */
+.accordion-item {
+    border: none !important;
+    background: transparent;
+    margin-bottom: 1rem !important;
+}
+
+.accordion-button {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: #1a2c3e;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.accordion-button i {
+    color: #2f3e9e;
+}
+
+.accordion-button:not(.collapsed) {
+    background: linear-gradient(135deg, #ffffff, #f8f9ff) !important;
+    color: #2f3e9e;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 4px 12px rgba(47, 62, 158, 0.1);
+}
+
+.accordion-button::after {
+    background-size: 0.875rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-position: center;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.accordion-body {
+    background: #ffffff;
+    border-radius: 0 0 20px 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* قائمة الخدمات */
+.services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.service-item-custom {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-radius: 14px;
+    transition: all 0.2s ease;
+}
+
+.service-item-custom i {
+    color: #2f3e9e;
+    font-size: 1.1rem;
+    margin-left: 0.75rem;
+}
+
+.service-item-custom:hover {
+    background: #e8eaf6;
+    transform: translateX(-5px);
+}
+
+/* الخريطة */
+.map-box {
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(47, 62, 158, 0.1);
+}
+
+#map {
+    height: 300px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+/* أزرار نوع المسار */
+.btn-group .btn-outline-primary {
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-group .btn-outline-primary.active {
+    background: #2f3e9e;
+    color: white;
+    box-shadow: 0 4px 12px rgba(47, 62, 158, 0.3);
+}
+
+/* زر الموقع الحالي */
+#useMyLocationBtn {
+    background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    border-radius: 40px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(47, 62, 158, 0.2);
+}
+
+#useMyLocationBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(47, 62, 158, 0.3);
+}
+
+/* معلومات المسار */
+#routeInfo {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff) !important;
+    border-radius: 16px;
+    padding: 12px 20px !important;
+    border: 1px solid rgba(47, 62, 158, 0.1);
+}
+
+#routeInfo span {
+    color: #2f3e9e;
+}
+
+/* المودال */
+.modal-content {
+    background: transparent;
+}
+
+.modal-header .btn-close-white {
+    background-color: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    padding: 10px;
+    opacity: 0.9;
+}
+
+/* تحسينات للهواتف */
+@media (max-width: 576px) {
+    .government-name {
+        font-size: 1.3rem;
+    }
+
+    .info-pill {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+
+    .accordion-button {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .gov-thumb {
+        width: 80px;
+        height: 60px;
+    }
+
+    #map {
+        height: 220px;
+    }
+
+    .btn-group .btn-outline-primary {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .service-item-custom {
+        padding: 0.6rem 0.8rem;
+    }
+
+    .scroll-hint {
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+}
+/* ===== تنسيقات صفحة عرض الخدمة ===== */
+
+/* بطاقة الخدمة الرئيسية */
+.service-main-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+    border-radius: 28px !important;
+    transition: all 0.3s ease;
+}
+
+/* أيقونة الخدمة */
+.service-icon-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 10px 25px -8px rgba(47, 62, 158, 0.3);
+}
+
+/* اسم الخدمة مع شريط جانبي */
+.service-name-wrapper {
+    position: relative;
+    padding-right: 20px;
+}
+
+.service-name-wrapper::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
+    border-radius: 4px;
+}
+
+.service-name {
+    font-size: 2rem;
+    color: #1a2c3e;
+}
+
+/* بطاقات الإحصائيات */
+.stat-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    background: #e8eaf6;
+    transform: translateY(-3px);
+}
+
+/* بطاقات الجهات */
+.government-service-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.government-service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 30px -12px rgba(47, 62, 158, 0.2) !important;
+}
+
+.government-card-img {
+    position: relative;
+    overflow: hidden;
+}
+
+.government-card-img img {
+    transition: transform 0.4s ease;
+}
+
+.government-service-card:hover .government-card-img img {
+    transform: scale(1.05);
+}
+
+.card-title a {
+    transition: color 0.2s ease;
+}
+
+.card-title a:hover {
+    color: #2f3e9e !important;
+}
+
+/* معلومات الاتصال في بطاقة الجهة */
+.government-contact .d-flex {
+    transition: all 0.2s ease;
+}
+
+.government-contact .d-flex:hover i {
+    transform: scale(1.1);
+}
+
+/* بطاقات الخدمات المشابهة */
+.related-service-card {
+    transition: all 0.2s ease;
+}
+
+.related-service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* تحسينات للهواتف */
+@media (max-width: 768px) {
+    .service-name {
+        font-size: 1.5rem;
+    }
+
+    .service-icon-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+    }
+
+    .service-icon-circle i {
+        font-size: 1.8rem !important;
+    }
+
+    .stat-card {
+        padding: 0.75rem;
+    }
+
+    .stat-card h5 {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .service-name {
+        font-size: 1.3rem;
+    }
+
+    .service-description p {
+        font-size: 0.9rem;
+    }
+
+    .government-service-card .card-body {
+        padding: 1rem !important;
+    }
+
+    .government-contact .small {
+        font-size: 0.75rem;
+    }
+}
