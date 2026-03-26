@@ -9,22 +9,23 @@ class Government extends Model
     protected $fillable = [
         'name',
         'description',
+        'address',
         'phone',
         'location_lat',
         'location_long',
-        'category_id',
-        'images', // 1. أضفنا الحقل هنا ليسمح لنا بحفظه
+        'government_category_id',
+        'images',
+        'contact_number',
+        'work_hours',
     ];
 
-    // 2. أضفنا هذا الجزء لتحويل النص الجاي من القاعدة إلى مصفوفة صور تلقائياً
     protected $casts = [
         'images' => 'array',
     ];
 
     public function category()
     {
-        // ملاحظة جانبية: تأكد أن المفتاح الخارجي هو category_id وليس id
-        return $this->belongsTo(GovernmentCategory::class, 'category_id');
+        return $this->belongsTo(GovernmentCategory::class, 'government_category_id');
     }
 
     public function services()
@@ -40,5 +41,15 @@ class Government extends Model
     public function favoritedByUsers()
     {
         return $this->belongsToMany(User::class, 'favorites');
+    }
+
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
+
+    public function getReviewsCountAttribute()
+    {
+        return $this->reviews()->count();
     }
 }

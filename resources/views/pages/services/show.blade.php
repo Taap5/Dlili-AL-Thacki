@@ -5,6 +5,7 @@
 @section('content')
 @php
     $isFavorited = Auth::check() ? Auth::user()->isServiceFavorite($service->id) : false;
+    $images = $service->images ?? [];
 @endphp
 
 <div class="container py-4">
@@ -39,6 +40,26 @@
             @if($service->description)
                 <div class="service-description mb-4">
                     <p class="text-muted lead">{{ $service->description }}</p>
+                </div>
+            @endif
+
+            <!-- معرض الصور -->
+            @if(count($images) > 0)
+                <div class="mb-4 images-strip-container">
+                    <div class="d-flex gap-2 overflow-auto py-2 images-strip">
+                        @foreach($images as $img)
+                            <img src="{{ asset('storage/' . $img) }}"
+                                 class="rounded-3 shadow-sm service-thumb"
+                                 style="width: 100px; height: 75px; object-fit: cover; cursor: pointer;"
+                                 data-bs-toggle="modal"
+                                 data-bs-target="#imagePreviewModal"
+                                 data-full-img="{{ asset('storage/' . $img) }}"
+                                 alt="صورة الخدمة">
+                        @endforeach
+                    </div>
+                    <div class="scroll-hint d-md-none">
+                        <i class="fas fa-chevron-left"></i> اسحب للمزيد <i class="fas fa-chevron-left"></i>
+                    </div>
                 </div>
             @endif
 
@@ -119,10 +140,10 @@
 
                             <!-- معلومات الاتصال -->
                             <div class="government-contact mb-3">
-                                @if($government->phone)
+                                @if($government->contact_number)
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="fas fa-phone-alt text-primary me-2" style="width: 20px;"></i>
-                                        <span class="small">{{ $government->phone }}</span>
+                                        <span class="small">{{ $government->contact_number }}</span>
                                     </div>
                                 @endif
                                 @if($government->work_hours)
@@ -181,8 +202,33 @@
         </div>
     @endif
 </div>
+
+<!-- Modal عرض الصور -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 text-center">
+                <img id="previewImage" src="" class="img-fluid rounded-4" style="max-height: 80vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script src="{{ asset('js/favorite.js') }}"></script>
+<script>
+    // معرض الصور للخدمات
+    document.querySelectorAll('.service-thumb').forEach(img => {
+        img.addEventListener('click', function() {
+            const previewImage = document.getElementById('previewImage');
+            if (previewImage) {
+                previewImage.src = this.dataset.fullImg || this.src;
+            }
+        });
+    });
+</script>
 @endpush

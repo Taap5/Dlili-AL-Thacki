@@ -7,13 +7,16 @@ document.addEventListener("DOMContentLoaded", function () {
     let timeout = null;
 
     function updateSuggestions() {
+        if (!searchInput || !categoryFilter) return;
+
         const query = searchInput.value.trim();
         const category = categoryFilter.value;
 
         fetch(`/search/suggestions?query=${encodeURIComponent(query)}&category_id=${category}`)
             .then(res => res.json())
             .then(data => {
-                // تحديث صندوق الاقتراحات اللحظية
+                if (!suggestionsBox) return;
+
                 if (!query) {
                     suggestionsBox.innerHTML = "";
                     suggestionsBox.classList.add("d-none");
@@ -26,7 +29,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     }).join("");
                     suggestionsBox.classList.remove("d-none");
 
-                    // حدث النقر على الاقتراح
                     document.querySelectorAll(".suggestion-item").forEach(el => {
                         el.addEventListener("click", function () {
                             const id = this.dataset.id;
@@ -40,19 +42,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 }
 
-                // تحديث نصائح البحث السريعة مع الأيقونات
                 const tipsContainer = document.querySelector('.search-tips .d-flex');
                 if (!tipsContainer) return;
 
-                // مسح القديم
                 document.querySelectorAll('.quick-suggestion').forEach(tip => tip.remove());
 
-                // إضافة 5 اقتراحات جديدة مع الأيقونات
                 data.slice(0, 5).forEach(item => {
                     const a = document.createElement('a');
                     const icon = document.createElement('i');
 
-                    // تعيين الأيقونة بناءً على النوع
                     if (item.type === 'government') {
                         a.href = `/governments/${item.id}`;
                         icon.className = "fas fa-building me-1";
@@ -67,7 +65,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     a.appendChild(icon);
                     a.appendChild(document.createTextNode(item.name));
 
-                    // منع السلوك الافتراضي للرابط وإضافة حدث النقر
                     a.addEventListener('click', function(e) {
                         e.preventDefault();
                         window.location.href = this.href;
@@ -78,38 +75,87 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // بقية الكود كما هو...
-    searchInput.addEventListener("input", function () {
-        clearTimeout(timeout);
-        timeout = setTimeout(updateSuggestions, 200);
-    });
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(updateSuggestions, 200);
+        });
+    }
 
-    categoryFilter.addEventListener("change", updateSuggestions);
+    if (categoryFilter) {
+        categoryFilter.addEventListener("change", updateSuggestions);
+    }
 
-    searchBtn.addEventListener("click", function () {
-        const query = searchInput.value.trim();
-        const category = categoryFilter.value;
-        if (!query) return;
-        window.location.href = `/search?query=${encodeURIComponent(query)}&category_id=${category}`;
-    });
+    if (searchBtn) {
+        searchBtn.addEventListener("click", function () {
+            const query = searchInput ? searchInput.value.trim() : '';
+            const category = categoryFilter ? categoryFilter.value : '';
+            if (!query) return;
+            window.location.href = `/search?query=${encodeURIComponent(query)}&category_id=${category}`;
+        });
+    }
 
-    searchInput.addEventListener("keypress", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            searchBtn.click();
-        }
-    });
+    if (searchInput) {
+        searchInput.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                if (searchBtn) searchBtn.click();
+            }
+        });
+    }
 
     document.addEventListener("click", function (e) {
-        if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+        if (searchInput && suggestionsBox && !searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
             suggestionsBox.classList.add("d-none");
         }
     });
 });
 
-document.querySelectorAll('.gov-thumb').forEach(img => {
-    img.addEventListener('click', function() {
-        document.getElementById('previewImage').src = this.dataset.img;
+// معرض الصور - فقط إذا كانت العناصر موجودة
+const govThumbs = document.querySelectorAll('.gov-thumb');
+if (govThumbs.length > 0) {
+    govThumbs.forEach(img => {
+        img.addEventListener('click', function() {
+            const previewImage = document.getElementById('previewImage');
+            if (previewImage) {
+                previewImage.src = this.dataset.img;
+            }
+        });
+    });
+}
+
+// الشريط الجانبي - فقط إذا كانت العناصر موجودة
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const closeBtn = document.getElementById('closeSidebar');
+
+    if (!sidebar || !toggleBtn) return;
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        if (overlay) overlay.classList.add('active');
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    toggleBtn.addEventListener('click', openSidebar);
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSidebar);
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
     });
 });
-

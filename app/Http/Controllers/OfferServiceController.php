@@ -3,14 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\OfferService;
+use App\Models\GovernmentCategory;
 use Illuminate\Http\Request;
 
 class OfferServiceController extends Controller
 {
-    public function index()
+    // عرض جميع الخدمات (مع فلتر)
+    public function index(Request $request)
     {
-        $services = OfferService::all();
-        return view('services.index', compact('services'));
+        $query = OfferService::with(['category', 'governments']);
+
+        // فلترة حسب التصنيف إذا وجد
+        if ($request->has('category') && $request->category) {
+            $query->where('government_category_id', $request->category);
+        }
+
+        $services = $query->orderBy('created_at', 'desc')->paginate(12);
+        $categories = GovernmentCategory::all();
+
+        return view('pages.services.index', compact('services', 'categories'));
     }
 
     public function create()
@@ -23,17 +34,23 @@ class OfferServiceController extends Controller
         $request->validate([
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:government_categories,id',
         ]);
 
-        OfferService::create($request->all());
+        OfferService::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'government_category_id' => $request->category_id,
+        ]);
 
-        return redirect()->route('services.index')->with('success', 'Service created successfully');
+        return redirect()->route('services.index')->with('success', 'تم إضافة الخدمة بنجاح');
     }
 
     public function edit($id)
     {
         $service = OfferService::findOrFail($id);
-        return view('services.edit', compact('service'));
+        $categories = GovernmentCategory::all();
+        return view('services.edit', compact('service', 'categories'));
     }
 
     public function update(Request $request, $id)
@@ -43,18 +60,24 @@ class OfferServiceController extends Controller
         $request->validate([
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:government_categories,id',
         ]);
 
-        $service->update($request->all());
+        $service->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'government_category_id' => $request->category_id,
+        ]);
 
-        return redirect()->route('services.index')->with('success', 'Service updated successfully');
+        return redirect()->route('services.index')->with('success', 'تم تحديث الخدمة بنجاح');
     }
 
     public function destroy($id)
     {
         OfferService::destroy($id);
-        return redirect()->route('services.index')->with('success', 'Service deleted successfully');
+        return redirect()->route('services.index')->with('success', 'تم حذف الخدمة بنجاح');
     }
+
     public function show($id)
     {
         $service = OfferService::with('governments')->findOrFail($id);

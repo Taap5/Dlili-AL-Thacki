@@ -15,8 +15,28 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="government-name-wrapper">
                         <h3 class="fw-bold mb-2 government-name">{{ $government->name }}</h3>
+                        @if ($government->reviews_count > 0)
+                            <div class="mt-1">
+                                <span class="text-warning">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @if ($i <= round($government->reviews_avg_rating))
+                                            <i class="fas fa-star"></i>
+                                        @else
+                                            <i class="far fa-star"></i>
+                                        @endif
+                                    @endfor
+                                </span>
+                                <span class="text-muted small ms-1">
+                                    ({{ number_format($government->reviews_avg_rating, 1) }} -
+                                    {{ $government->reviews_count }} تقييم)
+                                </span>
+                            </div>
+                        @else
+                            <div class="text-muted small mt-1">
+                                <i class="far fa-star"></i> لا توجد تقييمات بعد
+                            </div>
+                        @endif
                     </div>
-
                     @auth
                         <button class="btn {{ $isFavorited ? 'btn-danger' : 'btn-outline-danger' }} favorite-btn"
                             data-id="{{ $government->id }}" data-type="government"
@@ -29,8 +49,14 @@
 
                 <p class="text-muted mb-4">{{ $government->description }}</p>
 
-                <!-- معلومات الاتصال -->
+                <!-- معلومات الاتصال والعنوان -->
                 <div class="d-flex flex-wrap gap-2 mb-4">
+                    @if ($government->address)
+                        <div class="info-pill">
+                            <i class="fas fa-location-dot"></i>
+                            <span>{{ $government->address }}</span>
+                        </div>
+                    @endif
                     @if ($government->contact_number)
                         <div class="info-pill">
                             <i class="fas fa-phone-alt"></i>
@@ -149,7 +175,7 @@
                                 data-bs-target="#reviewsCard">
                                 <i class="fas fa-star me-2"></i>
                                 التقييمات والمراجعات
-                                <span class="badge bg-primary rounded-pill ms-2" id="reviewsCount">0</span>
+                                <span class="badge bg-primary rounded-pill ms-2" id="reviewsCount">{{ $government->reviews_count }}</span>
                             </button>
                         </h2>
                         <div id="reviewsCard" class="accordion-collapse collapse" data-bs-parent="#govAccordion">
@@ -259,7 +285,8 @@
         // معرض الصور
         document.querySelectorAll('.gov-thumb').forEach(img => {
             img.addEventListener('click', function() {
-                document.getElementById('previewImage').src = this.getAttribute('data-full-img') || this.src;
+                document.getElementById('previewImage').src = this.getAttribute('data-full-img') || this
+                    .src;
             });
         });
     </script>
@@ -318,7 +345,8 @@
                 })
                 .catch(error => {
                     console.error('Error loading reviews:', error);
-                    reviewsList.innerHTML = '<div class="text-center text-danger py-4">حدث خطأ في تحميل التقييمات</div>';
+                    reviewsList.innerHTML =
+                        '<div class="text-center text-danger py-4">حدث خطأ في تحميل التقييمات</div>';
                 })
                 .finally(() => {
                     if (loadingReviews) loadingReviews.remove();
@@ -341,44 +369,45 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الإرسال...';
 
-                fetch('{{ route("reviews.store") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        government_id: {{ $government->id }},
-                        rating: rating,
-                        comment: comment
+                fetch('{{ route('reviews.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            government_id: {{ $government->id }},
+                            rating: rating,
+                            comment: comment
+                        })
                     })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                        document.getElementById('ratingValue').value = 0;
-                        document.getElementById('reviewComment').value = '';
-                        document.querySelectorAll('.star-rating').forEach(star => {
-                            star.classList.remove('fas');
-                            star.classList.add('far');
-                        });
-                        loadReviews();
-                    } else {
-                        messageDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-                    }
-                })
-                .catch(error => {
-                    messageDiv.innerHTML = '<div class="alert alert-danger">حدث خطأ، يرجى المحاولة مرة أخرى</div>';
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>إرسال التقييم';
-                    setTimeout(() => {
-                        messageDiv.innerHTML = '';
-                    }, 5000);
-                });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                            document.getElementById('ratingValue').value = 0;
+                            document.getElementById('reviewComment').value = '';
+                            document.querySelectorAll('.star-rating').forEach(star => {
+                                star.classList.remove('fas');
+                                star.classList.add('far');
+                            });
+                            loadReviews();
+                        } else {
+                            messageDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        messageDiv.innerHTML =
+                            '<div class="alert alert-danger">حدث خطأ، يرجى المحاولة مرة أخرى</div>';
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>إرسال التقييم';
+                        setTimeout(() => {
+                            messageDiv.innerHTML = '';
+                        }, 5000);
+                    });
             });
         }
 

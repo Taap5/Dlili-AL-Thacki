@@ -28,29 +28,30 @@ class SearchController extends Controller
 
         // 1️⃣ مطابقة تامة
         $exactGovernment = Government::when($categoryId, function ($q) use ($categoryId) {
-                $q->where('government_category_id', $categoryId);
-            })->where('name', $query)->first();
+            $q->where('government_category_id', $categoryId);
+        })->where('name', $query)->first();
 
         if ($exactGovernment) {
             return redirect()->route('governments.show', $exactGovernment->id);
         }
 
         $exactService = OfferService::when($categoryId, function ($q) use ($categoryId) {
-                $q->where('government_category_id', $categoryId);
-            })->where('name', $query)->first();
+            $q->where('government_category_id', $categoryId);
+        })->where('name', $query)->first();
 
         if ($exactService) {
             return redirect()->route('services.show', $exactService->id);
         }
 
         // 2️⃣ بحث جزئي
-        $governments = Government::when($categoryId, function ($q) use ($categoryId) {
+        $governments = Government::with('reviews')
+            ->when($categoryId, function ($q) use ($categoryId) {
                 $q->where('government_category_id', $categoryId);
             })->where('name', 'like', "%{$query}%")->get();
 
         $services = OfferService::when($categoryId, function ($q) use ($categoryId) {
-                $q->where('government_category_id', $categoryId);
-            })->where('name', 'like', "%{$query}%")->with('governments')->get();
+            $q->where('government_category_id', $categoryId);
+        })->where('name', 'like', "%{$query}%")->with('governments')->get();
 
         $results = collect()
             ->concat($governments->map(fn($g) => [

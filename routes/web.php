@@ -10,6 +10,8 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\GovernmentController;
 use App\Http\Controllers\OfferServiceController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\MyReviewController;
+use App\Http\Controllers\AdminController;
 
 // الصفحة الرئيسية
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -35,7 +37,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // ===== مسارات المستخدم المسجل =====
 Route::middleware('auth')->group(function () {
-    // لوحة التحكم
+    // لوحة التحكم (للمستخدم العادي)
     Route::get('/dashboard', function () {
         return view('dashboard.index');
     })->name('dashboard');
@@ -48,15 +50,32 @@ Route::middleware('auth')->group(function () {
     Route::post('/favorite/government/toggle', [FavoriteController::class, 'toggleGovernment'])->name('favorite.government.toggle');
     Route::post('/favorite/service/toggle', [FavoriteController::class, 'toggleService'])->name('favorite.service.toggle');
 
-    // مسار خدمات المستخدم (اختياري)
-    Route::get('/dashboard/services', function () {
-        return view('dashboard.services');
-    })->name('dashboard.services');
-
-    // ===== مسارات التقييمات (للمستخدمين المسجلين فقط) =====
+    // ===== مسارات التقييمات =====
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::put('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
     Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+    // ===== مسار تقييماتي =====
+    Route::get('/my-reviews', [MyReviewController::class, 'index'])->name('my.reviews');
+    Route::delete('/my-reviews/{id}', [MyReviewController::class, 'destroy'])->name('my.reviews.destroy');
+
+    // ===== مسارات المسؤول =====
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/governments', [AdminController::class, 'governments'])->name('admin.governments');
+    Route::get('/admin/services', [AdminController::class, 'services'])->name('admin.services');
+    Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+
+    // ===== مسارات إدارة المسؤول (POST, PUT, DELETE) =====
+    Route::post('/admin/governments', [AdminController::class, 'storeGovernment'])->name('admin.governments.store');
+    Route::put('/admin/governments/{id}', [AdminController::class, 'updateGovernment'])->name('admin.governments.update');
+    Route::delete('/admin/governments/{id}', [AdminController::class, 'destroyGovernment'])->name('admin.governments.destroy');
+
+    Route::post('/admin/services', [AdminController::class, 'storeService'])->name('admin.services.store');
+    Route::put('/admin/services/{id}', [AdminController::class, 'updateService'])->name('admin.services.update');
+    Route::delete('/admin/services/{id}', [AdminController::class, 'destroyService'])->name('admin.services.destroy');
+
+    Route::put('/admin/users/{id}/role', [AdminController::class, 'updateUserRole'])->name('admin.users.role');
+    Route::delete('/admin/users/{id}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
 });
 
 // مسارات البحث
@@ -69,3 +88,7 @@ Route::get('/services/{id}', [OfferServiceController::class, 'show'])->name('ser
 
 // ===== مسارات التقييمات (للجميع - لعرض التقييمات) =====
 Route::get('/governments/{id}/reviews', [ReviewController::class, 'getReviews'])->name('reviews.get');
+// صفحات جميع الجهات وجميع الخدمات
+Route::get('/governments', [GovernmentController::class, 'index'])->name('governments.index');
+Route::get('/services', [OfferServiceController::class, 'index'])->name('services.index');
+Route::view('/help', 'pages.navbar-footer-pages.help')->name('help');

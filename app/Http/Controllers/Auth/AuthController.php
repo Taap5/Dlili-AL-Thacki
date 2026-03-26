@@ -30,7 +30,7 @@ class AuthController extends Controller
 
             // توجيه المسؤول إلى لوحة التحكم
             if (Auth::user()->hasRole('admin')) {
-                return redirect()->intended('/admin/dashboard');
+                return redirect()->intended('/dashboard');
             }
 
             // توجيه المستخدم العادي إلى الصفحة الرئيسية

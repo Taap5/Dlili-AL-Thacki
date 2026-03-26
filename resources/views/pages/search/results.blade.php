@@ -40,10 +40,39 @@
                 <h4 class="mb-3 fw-bold text-secondary">الجهات الحكومية</h4>
                 <div class="row g-4">
                     @foreach($governments as $gov)
+                        @php
+                            // جلب الكائن الكامل من قاعدة البيانات مع التقييمات
+                            $government = App\Models\Government::with('reviews')->find($gov['id']);
+                            $avgRating = $government ? ($government->reviews->avg('rating') ?? 0) : 0;
+                            $reviewsCount = $government ? $government->reviews->count() : 0;
+                        @endphp
                         <div class="col-md-4">
                             <div class="card h-100 shadow-sm border-0">
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="fw-bold mb-2">{{ $gov['name'] }}</h5>
+                                    <h5 class="fw-bold mb-1">{{ $gov['name'] }}</h5>
+
+                                    {{-- عرض متوسط التقييم --}}
+                                    @if($reviewsCount > 0)
+                                        <div class="mb-2">
+                                            <span class="text-warning small">
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    @if($i <= round($avgRating))
+                                                        <i class="fas fa-star"></i>
+                                                    @else
+                                                        <i class="far fa-star"></i>
+                                                    @endif
+                                                @endfor
+                                            </span>
+                                            <span class="text-muted small ms-1">
+                                                ({{ number_format($avgRating, 1) }})
+                                            </span>
+                                        </div>
+                                    @else
+                                        <div class="text-muted small mb-2">
+                                            <i class="far fa-star"></i> لا توجد تقييمات
+                                        </div>
+                                    @endif
+
                                     <p class="text-muted small flex-grow-1">
                                         جهة حكومية تقدم مجموعة من الخدمات للمواطنين
                                     </p>
@@ -97,5 +126,3 @@
     @endif
 </div>
 @endsection
-
-

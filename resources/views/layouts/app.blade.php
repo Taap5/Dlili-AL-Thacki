@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,6 +23,7 @@
 
     @stack('styles')
 </head>
+
 <body class="d-flex flex-column min-vh-100">
     <!-- تضمين الشريط التنقل -->
     <x-navbar />
@@ -42,6 +44,9 @@
 
     @stack('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    @auth
+        <x-sidebar />
+    @endauth
 </body>
+
 </html>

@@ -9,10 +9,20 @@ use Illuminate\Http\Request;
 
 class GovernmentController extends Controller
 {
-    public function index()
+    // عرض جميع الجهات (مع فلتر)
+    public function index(Request $request)
     {
-        $governments = Government::with(['category', 'services', 'reviews', 'favoritedByUsers'])->get();
-        return view('governments.index', compact('governments'));
+        $query = Government::with(['category', 'reviews']);
+
+        // فلترة حسب التصنيف إذا وجد
+        if ($request->has('category') && $request->category) {
+            $query->where('government_category_id', $request->category);
+        }
+
+        $governments = $query->orderBy('created_at', 'desc')->paginate(12);
+        $categories = GovernmentCategory::all();
+
+        return view('pages.governments.index', compact('governments', 'categories'));
     }
 
     public function create()
@@ -42,7 +52,7 @@ class GovernmentController extends Controller
             $government->services()->sync($request->services);
         }
 
-        return redirect()->route('governments.index')->with('success', 'Government created successfully');
+        return redirect()->route('governments.index')->with('success', 'تم إضافة الجهة بنجاح');
     }
 
     public function edit($id)
@@ -75,17 +85,22 @@ class GovernmentController extends Controller
             $government->services()->sync($request->services);
         }
 
-        return redirect()->route('governments.index')->with('success', 'Government updated successfully');
+        return redirect()->route('governments.index')->with('success', 'تم تحديث الجهة بنجاح');
     }
 
     public function destroy($id)
     {
         Government::destroy($id);
-        return redirect()->route('governments.index')->with('success', 'Government deleted successfully');
+        return redirect()->route('governments.index')->with('success', 'تم حذف الجهة بنجاح');
     }
+
     public function show($id)
     {
-        $government = Government::with(['category', 'services', 'reviews'])->findOrFail($id);
+        $government = Government::with(['category', 'services', 'reviews.user'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->findOrFail($id);
+
         return view('pages.governments.show', compact('government'));
     }
 }
