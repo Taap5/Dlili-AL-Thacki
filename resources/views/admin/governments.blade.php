@@ -312,7 +312,7 @@
         <div class="table-responsive">
             <table class="admin-table">
                 <thead>
-                    <tr>
+                    的人
                         <th>#</th>
                         <th>الاسم</th>
                         <th>التصنيف</th>
@@ -320,11 +320,10 @@
                         <th>ساعات العمل</th>
                         <th>الصور</th>
                         <th>الإجراءات</th>
-                    </tr>
-                </thead>
+                    </thead>
                 <tbody>
                     @forelse($governments as $gov)
-                        <tr>
+                        的人
                             <td>{{ $gov->id }}</td>
                             <td>{{ $gov->name }}</td>
                             <td>{{ $gov->category->name ?? 'غير مصنف' }}</td>
@@ -348,7 +347,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted">لا توجد جهات مسجلة</td>
+                            <td colspan="7" class="text-center text-muted py-4">لا توجد جهات مسجلة</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -372,11 +371,10 @@
                     <input type="text" name="name" class="form-control" required>
                 </div>
 
-                <!-- حقل البحث عن الموقع -->
                 <div class="form-group">
                     <label class="form-label">البحث عن الموقع (اختياري)</label>
                     <input type="text" name="search_address" class="form-control" placeholder="مثال: مستشفى الكويت، صنعاء، اليمن">
-                    <small class="text-muted">سيتم جلب الإحداثيات والعنوان التفصيلي تلقائياً من الخريطة</small>
+                    <small class="text-muted">سيتم جلب الإحداثيات والعنوان التفصيلي تلقائياً</small>
                 </div>
 
                 <div class="form-group">
@@ -407,7 +405,6 @@
                     <textarea name="description" class="form-control" rows="3"></textarea>
                 </div>
 
-                <!-- قسم الصور -->
                 <div class="form-group">
                     <label class="form-label">صور الجهة</label>
                     <input type="file" name="images[]" class="form-control" multiple accept="image/*" id="imagesInput">
@@ -439,11 +436,10 @@
                     <input type="text" name="name" id="edit_name" class="form-control" required>
                 </div>
 
-                <!-- حقل البحث عن الموقع (لتحديث الموقع) -->
                 <div class="form-group">
                     <label class="form-label">البحث عن الموقع (اختياري - لتحديث الموقع)</label>
                     <input type="text" name="search_address" id="edit_search_address" class="form-control" placeholder="مثال: مستشفى الكويت، صنعاء، اليمن">
-                    <small class="text-muted">اتركه فارغاً للاحتفاظ بالموقع الحالي، أو أدخل عنواناً جديداً لتحديث الإحداثيات والعنوان</small>
+                    <small class="text-muted">اتركه فارغاً للاحتفاظ بالموقع الحالي</small>
                 </div>
 
                 <div class="form-group">
@@ -476,9 +472,7 @@
                 <!-- قسم الصور الحالية -->
                 <div class="form-group" id="currentImagesContainer">
                     <label class="form-label">الصور الحالية</label>
-                    <div class="row g-2" id="currentImagesList">
-                        <!-- سيتم ملؤها بواسطة JavaScript -->
-                    </div>
+                    <div class="row g-2" id="currentImagesList"></div>
                 </div>
 
                 <!-- قسم إضافة صور جديدة -->
@@ -487,6 +481,60 @@
                     <input type="file" name="new_images[]" class="form-control" multiple accept="image/*" id="newImagesInput">
                     <small class="text-muted">يمكنك إضافة صور جديدة دون حذف الصور الحالية</small>
                     <div id="newImagePreview" class="row mt-2 g-2"></div>
+                </div>
+
+                <!-- قسم الخدمات مع التفاصيل -->
+                <div class="form-group">
+                    <label class="form-label">الخدمات المتوفرة</label>
+                    <div id="services-container">
+                        @foreach($services as $service)
+                            <div class="service-item mb-3 p-3 border rounded-3" data-service-id="{{ $service->id }}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input service-checkbox" type="checkbox"
+                                               name="services[{{ $service->id }}][id]"
+                                               value="{{ $service->id }}"
+                                               id="service_{{ $service->id }}">
+                                        <label class="form-check-label fw-bold" for="service_{{ $service->id }}">
+                                            {{ $service->name }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="service-details d-none" id="details_{{ $service->id }}">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small">وصف الخدمة (لهذه الجهة)</label>
+                                            <textarea name="services[{{ $service->id }}][description]"
+                                                      class="form-control form-control-sm"
+                                                      rows="2"></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="row g-2">
+                                                <div class="col-12">
+                                                    <label class="form-label small">رقم الاتصال الخاص</label>
+                                                    <input type="text" name="services[{{ $service->id }}][contact_number]"
+                                                           class="form-control form-control-sm"
+                                                           placeholder="مثال: 01 234 567">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small">ساعات العمل</label>
+                                                    <input type="text" name="services[{{ $service->id }}][work_hours]"
+                                                           class="form-control form-control-sm"
+                                                           placeholder="مثال: 8ص - 2م">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small">الرسوم</label>
+                                                    <input type="text" name="services[{{ $service->id }}][price]"
+                                                           class="form-control form-control-sm"
+                                                           placeholder="مثال: 5000 ريال">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -533,8 +581,6 @@
         document.getElementById('edit_category').value = gov.category_id;
         document.getElementById('edit_hours').value = gov.work_hours || '';
         document.getElementById('editForm').action = `/admin/governments/${gov.id}`;
-
-        // إعادة تعيين حقل البحث
         document.getElementById('edit_search_address').value = '';
 
         // عرض الصور الحالية
@@ -558,6 +604,44 @@
         } else {
             imagesList.innerHTML = '<div class="col-12 text-muted">لا توجد صور</div>';
         }
+
+        // تحديث الخدمات بناءً على خدمات الجهة
+        const governmentServices = gov.services || [];
+        document.querySelectorAll('.service-checkbox').forEach(checkbox => {
+            const serviceId = parseInt(checkbox.value);
+            const isChecked = governmentServices.some(s => s.id === serviceId);
+            checkbox.checked = isChecked;
+
+            const detailsDiv = document.getElementById(`details_${serviceId}`);
+            if (detailsDiv) {
+                if (isChecked) {
+                    detailsDiv.classList.remove('d-none');
+                    const serviceData = governmentServices.find(s => s.id === serviceId);
+                    if (serviceData && serviceData.pivot) {
+                        const descTextarea = detailsDiv.querySelector('textarea[name*="[description]"]');
+                        const contactInput = detailsDiv.querySelector('input[name*="[contact_number]"]');
+                        const hoursInput = detailsDiv.querySelector('input[name*="[work_hours]"]');
+                        const priceInput = detailsDiv.querySelector('input[name*="[price]"]');
+
+                        if (descTextarea) descTextarea.value = serviceData.pivot.description || '';
+                        if (contactInput) contactInput.value = serviceData.pivot.contact_number || '';
+                        if (hoursInput) hoursInput.value = serviceData.pivot.work_hours || '';
+                        if (priceInput) priceInput.value = serviceData.pivot.price || '';
+                    }
+                } else {
+                    detailsDiv.classList.add('d-none');
+                    // مسح الحقول عند إلغاء التحديد
+                    const descTextarea = detailsDiv.querySelector('textarea[name*="[description]"]');
+                    const contactInput = detailsDiv.querySelector('input[name*="[contact_number]"]');
+                    const hoursInput = detailsDiv.querySelector('input[name*="[work_hours]"]');
+                    const priceInput = detailsDiv.querySelector('input[name*="[price]"]');
+                    if (descTextarea) descTextarea.value = '';
+                    if (contactInput) contactInput.value = '';
+                    if (hoursInput) hoursInput.value = '';
+                    if (priceInput) priceInput.value = '';
+                }
+            }
+        });
 
         document.getElementById('editModal').classList.add('show');
     }
@@ -597,7 +681,6 @@
         }
     }
 
-    // معاينة الصور للإضافة
     document.getElementById('imagesInput')?.addEventListener('change', function(e) {
         const preview = document.getElementById('imagePreview');
         preview.innerHTML = '';
@@ -615,7 +698,6 @@
         });
     });
 
-    // معاينة الصور الجديدة للتعديل
     document.getElementById('newImagesInput')?.addEventListener('change', function(e) {
         const preview = document.getElementById('newImagePreview');
         preview.innerHTML = '';
@@ -630,6 +712,19 @@
                 preview.appendChild(col);
             };
             reader.readAsDataURL(file);
+        });
+    });
+
+    document.querySelectorAll('.service-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const serviceItem = this.closest('.service-item');
+            const serviceId = serviceItem.dataset.serviceId;
+            const detailsDiv = document.getElementById(`details_${serviceId}`);
+            if (this.checked) {
+                detailsDiv.classList.remove('d-none');
+            } else {
+                detailsDiv.classList.add('d-none');
+            }
         });
     });
 </script>

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Government;
 use App\Models\GovernmentCategory;
 use Illuminate\Http\Request;
 
@@ -9,14 +9,11 @@ class GovernmentCategoryController extends Controller
 {
     public function index()
     {
-        $categories = GovernmentCategory::all();
-        return view('categories.index', compact('categories'));
-            // جلب التصنيفات مع عدد الجهات في كل تصنيف
-    $categories = GovernmentCategory::withCount('governments')
-        ->orderBy('name')
-        ->get();
+        $categories = GovernmentCategory::withCount('governments')
+            ->orderBy('name')
+            ->get();
 
-    return view('pages.categories.index', compact('categories'));
+        return view('pages.categories.index', compact('categories'));
     }
 
     public function create()
@@ -33,7 +30,7 @@ class GovernmentCategoryController extends Controller
 
         GovernmentCategory::create($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Category created successfully');
+        return redirect()->route('categories.index')->with('success', 'تم إضافة التصنيف بنجاح');
     }
 
     public function edit($id)
@@ -53,20 +50,23 @@ class GovernmentCategoryController extends Controller
 
         $category->update($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Category updated successfully');
+        return redirect()->route('categories.index')->with('success', 'تم تحديث التصنيف بنجاح');
     }
 
     public function destroy($id)
     {
         GovernmentCategory::destroy($id);
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully');
+        return redirect()->route('categories.index')->with('success', 'تم حذف التصنيف بنجاح');
     }
-    public function show(GovernmentCategory $category)
-{
-    $governments = $category->governments()->with('services')->get();
 
-    return view('pages.categories.show', compact('category', 'governments'));
+    public function show($id)
+    {
+        $category = GovernmentCategory::findOrFail($id);
+        $governments = Government::where('government_category_id', $id)
+            ->with('reviews')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        return view('pages.categories.show', compact('category', 'governments'));
+    }
 }
-
-}
-

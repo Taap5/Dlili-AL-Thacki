@@ -19,7 +19,9 @@ class OfferService extends Model
 
     public function governments()
     {
-        return $this->belongsToMany(Government::class, 'government_offer_service', 'offer_service_id', 'government_id');
+        return $this->belongsToMany(Government::class, 'government_offer_service')
+            ->withPivot('description', 'contact_number', 'work_hours', 'price')
+            ->withTimestamps();
     }
 
     public function category()

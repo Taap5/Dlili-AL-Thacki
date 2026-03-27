@@ -30,7 +30,9 @@ class Government extends Model
 
     public function services()
     {
-        return $this->belongsToMany(OfferService::class, 'government_offer_service');
+        return $this->belongsToMany(OfferService::class, 'government_offer_service')
+            ->withPivot('description', 'contact_number', 'work_hours', 'price')
+            ->withTimestamps();
     }
 
     public function reviews()

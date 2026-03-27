@@ -58,7 +58,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('register') }}">
+                    <form method="POST" action="{{ route('verification.send') }}">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label">الاسم</label>
@@ -86,7 +86,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 mb-3">
-                            <i class="fas fa-user-plus me-2"></i>إنشاء حساب
+                            <i class="fas fa-paper-plane me-2"></i>إنشاء حساب
                         </button>
 
                         <div class="text-center">

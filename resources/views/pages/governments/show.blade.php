@@ -49,27 +49,13 @@
 
                 <p class="text-muted mb-4">{{ $government->description }}</p>
 
-                <!-- معلومات الاتصال والعنوان -->
-                <div class="d-flex flex-wrap gap-2 mb-4">
-                    @if ($government->address)
-                        <div class="info-pill">
-                            <i class="fas fa-location-dot"></i>
-                            <span>{{ $government->address }}</span>
-                        </div>
-                    @endif
-                    @if ($government->contact_number)
-                        <div class="info-pill">
-                            <i class="fas fa-phone-alt"></i>
-                            <span>{{ $government->contact_number }}</span>
-                        </div>
-                    @endif
-                    @if ($government->work_hours)
-                        <div class="info-pill">
-                            <i class="fas fa-clock"></i>
-                            <span>{{ $government->work_hours }}</span>
-                        </div>
-                    @endif
-                </div>
+                <!-- العنوان التفصيلي -->
+                @if($government->address)
+                    <div class="address-info mb-3">
+                        <i class="fas fa-location-dot text-primary me-2"></i>
+                        <span class="text-muted">{{ $government->address }}</span>
+                    </div>
+                @endif
 
                 <!-- معرض الصور -->
                 @if (count($images))
@@ -140,30 +126,57 @@
                         </div>
                     </div>
 
-                    <!-- الخدمات المتوفرة -->
+                    <!-- الخدمات المتوفرة (مع التفاصيل الخاصة) -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#servicesCard">
                                 <i class="fas fa-clipboard-list me-2"></i>
                                 الخدمات المتوفرة
+                                <span class="badge bg-primary rounded-pill ms-2">{{ $government->services->count() }}</span>
                             </button>
                         </h2>
                         <div id="servicesCard" class="accordion-collapse collapse" data-bs-parent="#govAccordion">
                             <div class="accordion-body">
-                                <div class="services-list">
-                                    @forelse($government->services as $service)
-                                        <div class="service-item-custom">
-                                            <i class="fas fa-check-circle"></i>
-                                            <span>{{ $service->name }}</span>
-                                        </div>
-                                    @empty
-                                        <div class="text-center text-muted py-4">
-                                            <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
-                                            <p class="mb-0">لا توجد خدمات مسجلة حالياً</p>
-                                        </div>
-                                    @endforelse
-                                </div>
+                                @if($government->services->count() > 0)
+                                    <div class="services-grid">
+                                        @foreach($government->services as $service)
+                                            <div class="service-card-clickable"
+                                                 data-service-id="{{ $service->id }}"
+                                                 data-service-name="{{ $service->name }}"
+                                                 data-service-description="{{ $service->pivot->description ?? $service->description }}"
+                                                 data-service-contact="{{ $service->pivot->contact_number }}"
+                                                 data-service-hours="{{ $service->pivot->work_hours }}"
+                                                 data-service-price="{{ $service->pivot->price }}">
+                                                <div class="service-icon-small">
+                                                    <i class="fas fa-concierge-bell"></i>
+                                                </div>
+                                                <div class="service-info">
+                                                    <h6 class="service-name-clickable">{{ $service->name }}</h6>
+                                                    <p class="service-desc-preview">{{ Str::limit($service->pivot->description ?? $service->description ?? 'لا يوجد وصف', 50) }}</p>
+                                                    @if($service->pivot->contact_number)
+                                                        <small class="text-muted d-block mt-1">
+                                                            <i class="fas fa-phone-alt me-1"></i> {{ $service->pivot->contact_number }}
+                                                        </small>
+                                                    @endif
+                                                    @if($service->pivot->work_hours)
+                                                        <small class="text-muted d-block">
+                                                            <i class="fas fa-clock me-1"></i> {{ $service->pivot->work_hours }}
+                                                        </small>
+                                                    @endif
+                                                </div>
+                                                <div class="service-arrow">
+                                                    <i class="fas fa-chevron-left"></i>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
+                                        <p class="mb-0">لا توجد خدمات مسجلة حالياً</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -238,6 +251,42 @@
                         </div>
                     </div>
 
+                    <!-- معلومات الاتصال (في الأسفل) -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#contactCard">
+                                <i class="fas fa-address-card me-2"></i>
+                                معلومات الاتصال
+                            </button>
+                        </h2>
+                        <div id="contactCard" class="accordion-collapse collapse" data-bs-parent="#govAccordion">
+                            <div class="accordion-body">
+                                <div class="contact-info-grid">
+                                    @if ($government->contact_number)
+                                        <div class="contact-item">
+                                            <div class="contact-icon">
+                                                <i class="fas fa-phone-alt"></i>
+                                            </div>
+                                            <div>
+                                                <div class="contact-label">رقم الهاتف</div>
+                                                <div class="contact-value">
+                                                    <a href="tel:{{ $government->contact_number }}" class="text-decoration-none text-dark">
+                                                        {{ $government->contact_number }}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="text-center text-muted py-3">
+                                            <i class="fas fa-info-circle me-1"></i> لا توجد معلومات اتصال مسجلة
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -254,6 +303,30 @@
                 <div class="modal-body p-0 text-center">
                     <img id="previewImage" src="" class="img-fluid rounded-4"
                         style="max-height: 80vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal عرض تفاصيل الخدمة -->
+    <div class="modal fade" id="serviceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">تفاصيل الخدمة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <div class="service-modal-icon text-center mb-3">
+                        <i class="fas fa-concierge-bell fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="fw-bold text-center mb-3" id="serviceModalName"></h4>
+                    <div id="serviceModalDetails"></div>
+                    <div class="text-center mt-4">
+                        <a href="#" id="serviceModalLink" class="btn btn-outline-primary">
+                            <i class="fas fa-info-circle me-2"></i>عرض صفحة الخدمة
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -287,6 +360,46 @@
             img.addEventListener('click', function() {
                 document.getElementById('previewImage').src = this.getAttribute('data-full-img') || this
                     .src;
+            });
+        });
+
+        // عرض تفاصيل الخدمة في المودال (مع pivot)
+        document.querySelectorAll('.service-card-clickable').forEach(card => {
+            card.addEventListener('click', function() {
+                const serviceId = this.dataset.serviceId;
+                const serviceName = this.dataset.serviceName;
+                const serviceDescription = this.dataset.serviceDescription || 'لا يوجد وصف مفصل لهذه الخدمة.';
+                const serviceContact = this.dataset.serviceContact;
+                const serviceHours = this.dataset.serviceHours;
+                const servicePrice = this.dataset.servicePrice;
+
+                let detailsHtml = `<p class="text-muted">${serviceDescription}</p>`;
+
+                if (serviceContact) {
+                    detailsHtml += `<div class="mt-3 p-2 bg-light rounded-3">
+                                        <i class="fas fa-phone-alt text-primary me-2"></i>
+                                        <strong>رقم الاتصال:</strong>
+                                        <a href="tel:${serviceContact}" class="text-decoration-none">${serviceContact}</a>
+                                    </div>`;
+                }
+                if (serviceHours) {
+                    detailsHtml += `<div class="mt-2 p-2 bg-light rounded-3">
+                                        <i class="fas fa-clock text-primary me-2"></i>
+                                        <strong>ساعات العمل:</strong> ${serviceHours}
+                                    </div>`;
+                }
+                if (servicePrice) {
+                    detailsHtml += `<div class="mt-2 p-2 bg-light rounded-3">
+                                        <i class="fas fa-tag text-primary me-2"></i>
+                                        <strong>الرسوم:</strong> ${servicePrice}
+                                    </div>`;
+                }
+
+                document.getElementById('serviceModalName').innerText = serviceName;
+                document.getElementById('serviceModalDetails').innerHTML = detailsHtml;
+                document.getElementById('serviceModalLink').href = `/services/${serviceId}`;
+
+                new bootstrap.Modal(document.getElementById('serviceModal')).show();
             });
         });
     </script>
@@ -462,6 +575,237 @@
             });
         }
     </script>
+
+    <style>
+        /* تنسيقات بطاقات الخدمات */
+        .services-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .service-card-clickable {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #ffffff !important;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #e8eaf6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .service-card-clickable:hover {
+            background: #f8f9ff !important;
+            border-color: #2f3e9e;
+            transform: translateX(-5px);
+            box-shadow: 0 4px 12px rgba(47,62,158,0.1);
+        }
+
+        .service-icon-small {
+            width: 48px;
+            height: 48px;
+            background: #e8eaf6 !important;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2f3e9e;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .service-info {
+            flex: 1;
+        }
+
+        .service-name-clickable {
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #1a2c3e;
+        }
+
+        .service-desc-preview {
+            font-size: 12px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .service-arrow {
+            color: #2f3e9e;
+            font-size: 14px;
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .service-card-clickable:hover .service-arrow {
+            opacity: 1;
+            transform: translateX(3px);
+        }
+
+        /* التأكد من عدم وجود أي شفافية */
+        .service-card-clickable * {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* تنسيقات معلومات الاتصال */
+        .contact-info-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .contact-item:hover {
+            background: #f0f2ff;
+        }
+
+        .contact-icon {
+            width: 44px;
+            height: 44px;
+            background: #ffffff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2f3e9e;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .contact-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+
+        .contact-value {
+            font-weight: 500;
+            color: #1a2c3e;
+        }
+
+        .contact-value a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .contact-value a:hover {
+            color: #2f3e9e;
+        }
+
+        /* تنسيقات المودال */
+        .modal-content {
+            background: #ffffff !important;
+            border: none !important;
+            border-radius: 24px !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+        }
+
+        .modal-header {
+            background: #ffffff !important;
+            border-bottom: 1px solid #eef2f7 !important;
+            border-radius: 24px 24px 0 0 !important;
+        }
+
+        .modal-body {
+            background: #ffffff !important;
+            padding: 1.5rem !important;
+        }
+
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5) !important;
+        }
+
+        .modal-backdrop.show {
+            opacity: 1 !important;
+            background-color: rgba(0,0,0,0.5) !important;
+        }
+
+        .service-modal-icon {
+            background: #f0f2ff;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        /* إصلاح مشكلة scroll-hint */
+        .images-strip-container {
+            position: relative;
+        }
+
+        .scroll-hint {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            pointer-events: none;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .images-strip-container:hover .scroll-hint {
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-hint {
+                opacity: 0.5 !important;
+                background: rgba(0,0,0,0.5);
+                font-size: 10px;
+                padding: 4px 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .service-card-clickable {
+                padding: 12px;
+            }
+            .service-icon-small {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            .service-name-clickable {
+                font-size: 14px;
+            }
+            .contact-item {
+                padding: 10px 12px;
+            }
+            .contact-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+            .contact-value {
+                font-size: 14px;
+            }
+        }
+    </style>
 
     <script src="{{ asset('js/map.js') }}"></script>
     <script src="{{ asset('js/favorite.js') }}"></script>

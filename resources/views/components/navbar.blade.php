@@ -8,6 +8,8 @@
         <div class="top-links">
             <a href="{{ route('about') }}" class="top-link">عن النظام</a>
             <span>|</span>
+            <a href="{{ route('help') }}" class="top-link">المساعدة</a>
+            <span>|</span>
             <div class="language-switcher">
                 <a href="#" class="top-link lang-btn">EN</a>
                 <span>|</span>
@@ -20,7 +22,7 @@
     <div class="main-bar">
         <div class="logo-area">
             <a href="{{ url('/') }}" class="logo">
-                @if(file_exists(public_path('images/logo.png')))
+                @if (file_exists(public_path('images/logo.png')))
                     <img src="{{ asset('images/logo.png') }}" alt="Dalili Logo" class="logo-img">
                 @else
                     <div class="logo-placeholder">
@@ -48,8 +50,13 @@
                 </div>
             @else
                 <button class="user-menu-btn" id="sidebarToggle">
+                    @if (Auth::user()->profile_photo)
+                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" class="rounded-circle"
+                            style="width: 32px; height: 32px; object-fit: cover;">
+                    @else
+                        <i class="fas fa-user-circle"></i>
+                    @endif
                     <span class="user-name">{{ Auth::user()->user_name }}</span>
-                    <i class="fas fa-user-circle"></i>
                 </button>
             @endguest
         </div>
@@ -60,7 +67,7 @@
     /* ===== هيدر جديد ===== */
     .mobile-header {
         background: #fff;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         position: fixed;
         top: 0;
         left: 0;
@@ -101,7 +108,7 @@
     }
 
     .top-link {
-        color: rgba(255,255,255,0.8);
+        color: rgba(255, 255, 255, 0.8);
         text-decoration: none;
         transition: all 0.2s;
     }
@@ -111,7 +118,7 @@
     }
 
     .top-links span {
-        color: rgba(255,255,255,0.3);
+        color: rgba(255, 255, 255, 0.3);
     }
 
     .language-switcher {
@@ -238,11 +245,18 @@
         color: #1a1f2e;
         cursor: pointer;
         transition: all 0.2s;
+        direction: rtl;
     }
 
     .user-menu-btn i {
         font-size: 24px;
         color: #2f3e9e;
+    }
+
+    .user-menu-btn img {
+        width: 32px;
+        height: 32px;
+        object-fit: cover;
     }
 
     .user-menu-btn:hover {
@@ -281,7 +295,8 @@
             padding: 8px 12px;
         }
 
-        .logo-img, .logo-placeholder {
+        .logo-img,
+        .logo-placeholder {
             width: 36px;
             height: 36px;
         }

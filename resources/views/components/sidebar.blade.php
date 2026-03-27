@@ -3,13 +3,21 @@
 <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
         <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">
-                <i class="fas fa-user-circle me-2"></i>
-                {{ Auth::user()->user_name }}
-            </h5>
+            <div class="d-flex align-items-center gap-2">
+                @if(Auth::user()->profile_photo)
+                    <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}"
+                         class="rounded-circle"
+                         style="width: 48px; height: 48px; object-fit: cover;">
+                @else
+                    <i class="fas fa-user-circle fa-3x text-primary"></i>
+                @endif
+                <div>
+                    <h5 class="mb-0 fw-bold">{{ Auth::user()->user_name }}</h5>
+                    <p class="text-muted small mb-0">{{ Auth::user()->email }}</p>
+                </div>
+            </div>
             <button id="closeSidebar" class="btn-close"></button>
         </div>
-        <p class="text-muted small mt-2 mb-0">{{ Auth::user()->email }}</p>
     </div>
     <div class="sidebar-body">
         <ul class="sidebar-menu">
@@ -35,6 +43,12 @@
                 <a href="{{ route('my.reviews') }}" class="sidebar-link">
                     <i class="fas fa-star me-3"></i>
                     <span>تقييماتي</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('team') }}" class="sidebar-link">
+                    <i class="fas fa-users me-3"></i>
+                    <span>من نحن</span>
                 </a>
             </li>
             @if(Auth::user()->hasRole('admin'))

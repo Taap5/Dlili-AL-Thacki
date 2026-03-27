@@ -72,7 +72,7 @@ main {
     border-color: var(--primary-blue);
 }
 
-/* البطاقات الرئيسية */
+/* البطاقات الرئيسية (الصفحة الرئيسية) */
 .services-section {
     padding: 2rem 0;
 }
@@ -108,33 +108,12 @@ main {
     color: white !important;
 }
 
-.service-card {
-    transition: all 0.3s ease;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #e8eaf6;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
-}
-
-.service-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(47, 62, 158, 0.15) !important;
-    border-color: var(--primary-blue);
-}
-
 .service-card .card-body {
     text-align: center;
     padding: 1.5rem;
     flex: 1;
     display: flex;
     flex-direction: column;
-}
-
-.service-icon {
-    margin-bottom: 1rem;
 }
 
 .service-icon i {
@@ -201,15 +180,12 @@ main {
 }
 
 /* ===== تحسينات للهواتف ===== */
-
-/* هواتف صغيرة جداً (أقل من 480px) */
 @media (max-width: 480px) {
     main {
         padding-top: 90px;
     }
 }
 
-/* هواتف صغيرة (أقل من 576px) */
 @media (max-width: 576px) {
     .welcome-section {
         padding-top: 1rem !important;
@@ -273,11 +249,6 @@ main {
 
     .service-card {
         border-radius: 10px;
-        margin-bottom: 0;
-    }
-
-    .service-card:active {
-        transform: scale(0.98);
     }
 
     .service-card .card-body {
@@ -337,7 +308,6 @@ main {
     }
 }
 
-/* هواتف متوسطة (576px - 768px) */
 @media (max-width: 768px) {
     .btn:active {
         transform: scale(0.96);
@@ -353,7 +323,6 @@ main {
     }
 }
 
-/* أجهزة لوحية (768px - 992px) */
 @media (min-width: 768px) and (max-width: 992px) {
     .service-card .card-body {
         padding: 1.5rem !important;
@@ -381,7 +350,6 @@ main {
     gap: 1rem !important;
 }
 
-/* تحسين الأحجام النسبية */
 .fs-6 {
     font-size: 0.9rem !important;
 }
@@ -390,7 +358,7 @@ main {
     font-size: 1.1rem !important;
 }
 
-/* css لصندوق الاقتراحات */
+/* ===== تنسيقات الاقتراحات ===== */
 .suggestions-box {
     position: absolute;
     top: 100%;
@@ -407,7 +375,6 @@ main {
     cursor: pointer;
 }
 
-/* ===== تنسيقات الاقتراحات اللحظية ===== */
 .suggestions-box {
     position: absolute;
     top: 100%;
@@ -438,7 +405,6 @@ main {
     background-color: #f8f9fa;
 }
 
-/* ===== تنسيقات نصائح البحث السريعة ===== */
 .quick-suggestion {
     transition: all 0.3s ease;
     cursor: pointer;
@@ -455,7 +421,6 @@ main {
     box-shadow: 0 4px 8px rgba(47, 62, 158, 0.2);
 }
 
-/* تحسينات للهواتف */
 @media (max-width: 768px) {
     .suggestions-box {
         position: absolute !important;
@@ -476,20 +441,12 @@ main {
     }
 }
 
+/* ===== تنسيقات صفحة عرض الجهات ===== */
 .government-page {
     max-width: 720px;
     margin: auto;
 }
 
-.main-government-card {
-    border-radius: 16px;
-}
-
-.government-name {
-    font-weight: 700;
-}
-
-/* ===== تحسينات صفحة عرض الجهات ===== */
 .main-government-card {
     border-radius: 24px !important;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -546,6 +503,7 @@ main {
     transform: translateY(-2px);
 }
 
+/* معرض الصور */
 .images-strip {
     scrollbar-width: thin;
     scrollbar-color: #2f3e9e #e0e0e0;
@@ -583,27 +541,7 @@ main {
     box-shadow: 0 8px 20px rgba(47, 62, 158, 0.2);
 }
 
-.scroll-hint {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255,255,255,0.95);
-    padding: 8px 12px;
-    border-radius: 30px;
-    font-size: 12px;
-    color: #2f3e9e;
-    pointer-events: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    white-space: nowrap;
-    opacity: 0.7;
-    transition: opacity 0.3s;
-}
-
-.images-strip-container:hover .scroll-hint {
-    opacity: 0;
-}
-
+/* الأكورديون */
 .accordion-item {
     border: none !important;
     background: transparent;
@@ -650,32 +588,130 @@ main {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.services-list {
+/* بطاقات الخدمات في صفحة الجهات */
+.services-grid {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 12px;
 }
 
-.service-item-custom {
+.service-card-clickable {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
-    background: #f8f9fa;
-    border-radius: 14px;
+    gap: 15px;
+    padding: 15px;
+    background: #ffffff;
+    border-radius: 16px;
+    cursor: pointer;
     transition: all 0.2s ease;
+    border: 1px solid #e8eaf6;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
-.service-item-custom i {
-    color: #2f3e9e;
-    font-size: 1.1rem;
-    margin-left: 0.75rem;
-}
-
-.service-item-custom:hover {
-    background: #e8eaf6;
+.service-card-clickable:hover {
+    background: #f8f9ff;
     transform: translateX(-5px);
+    border-color: #2f3e9e;
+    box-shadow: 0 4px 12px rgba(47,62,158,0.1);
 }
 
+.service-icon-small {
+    width: 48px;
+    height: 48px;
+    background: #e8eaf6;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2f3e9e;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.service-info {
+    flex: 1;
+}
+
+.service-name-clickable {
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #1a2c3e;
+}
+
+.service-desc-preview {
+    font-size: 12px;
+    color: #6c757d;
+    margin: 0;
+}
+
+.service-arrow {
+    color: #2f3e9e;
+    font-size: 14px;
+    opacity: 0.5;
+    transition: all 0.2s;
+}
+
+.service-card-clickable:hover .service-arrow {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+/* معلومات الاتصال */
+.contact-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.contact-item:hover {
+    background: #f0f2ff;
+}
+
+.contact-icon {
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2f3e9e;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.contact-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+
+.contact-value {
+    font-weight: 500;
+    color: #1a2c3e;
+}
+
+.contact-value a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.contact-value a:hover {
+    color: #2f3e9e;
+}
+
+/* الخريطة */
 .map-box {
     border-radius: 20px !important;
     overflow: hidden;
@@ -739,7 +775,6 @@ main {
     opacity: 0.9;
 }
 
-/* تحسينات للهواتف */
 @media (max-width: 576px) {
     .government-name {
         font-size: 1.3rem;
@@ -769,13 +804,32 @@ main {
         font-size: 0.8rem;
     }
 
-    .service-item-custom {
-        padding: 0.6rem 0.8rem;
+    .service-card-clickable {
+        padding: 12px;
     }
 
-    .scroll-hint {
-        font-size: 10px;
-        padding: 5px 10px;
+    .service-icon-small {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .service-name-clickable {
+        font-size: 14px;
+    }
+
+    .contact-item {
+        padding: 10px 12px;
+    }
+
+    .contact-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .contact-value {
+        font-size: 14px;
     }
 }
 
@@ -878,7 +932,6 @@ main {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* تحسينات للهواتف */
 @media (max-width: 768px) {
     .service-name {
         font-size: 1.5rem;
@@ -1032,9 +1085,9 @@ main {
         right: -280px;
     }
 }
-/* تمرير سلس عند النقر على الروابط الداخلية */
+
+/* تمرير سلس */
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: 100px; /* مسافة أعلى الصفحة لعدم تغطية الهيدر */
+    scroll-padding-top: 100px;
 }
-

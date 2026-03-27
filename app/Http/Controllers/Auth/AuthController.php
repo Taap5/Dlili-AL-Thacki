@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -46,29 +47,6 @@ class AuthController extends Controller
     public function showRegister()
     {
         return view('auth.register');
-    }
-
-    // معالجة إنشاء حساب جديد
-    public function register(Request $request)
-    {
-        $request->validate([
-            'user_name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        $user = User::create([
-            'user_name' => $request->user_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $user->assignRole('registered');
-        Auth::login($user);
-
-        return redirect('/')->with('success', 'تم إنشاء الحساب بنجاح!');
     }
 
     // تسجيل الخروج
@@ -118,7 +96,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
                 $user->password = Hash::make($password);
-                $user->update();  // استخدم update بدلاً من save
+                $user->update();
             }
         );
 
@@ -142,8 +120,28 @@ class AuthController extends Controller
             'user_name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
+            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'current_password' => 'nullable|string|required_with:password',
             'password' => 'nullable|string|min:6|confirmed',
         ]);
+
+        // التحقق من كلمة المرور الحالية إذا كان المستخدم يريد تغيير كلمة المرور
+        if ($request->filled('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'كلمة المرور الحالية غير صحيحة']);
+            }
+        }
+
+        // رفع الصورة الشخصية
+        if ($request->hasFile('profile_photo')) {
+            // حذف الصورة القديمة إذا وجدت
+            if ($user->profile_photo) {
+                Storage::disk('public')->delete($user->profile_photo);
+            }
+
+            $path = $request->file('profile_photo')->store('profiles', 'public');
+            $user->profile_photo = $path;
+        }
 
         $user->user_name = $request->user_name;
         $user->email = $request->email;
@@ -153,8 +151,22 @@ class AuthController extends Controller
             $user->password = Hash::make($request->password);
         }
 
-        $user->update();  // استخدم update بدلاً من save
+        $user->save();
 
         return redirect()->route('profile')->with('success', 'تم تحديث الملف الشخصي بنجاح');
+    }
+
+    // حذف الصورة الشخصية
+    public function removePhoto()
+    {
+        $user = Auth::user();
+
+        if ($user->profile_photo) {
+            Storage::disk('public')->delete($user->profile_photo);
+            $user->profile_photo = null;
+            $user->save();
+        }
+
+        return response()->json(['success' => true]);
     }
 }

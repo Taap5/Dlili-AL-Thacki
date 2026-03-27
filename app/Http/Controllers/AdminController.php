@@ -52,7 +52,6 @@ class AdminController extends Controller
             return ['lat' => null, 'lng' => null, 'address' => null];
         }
 
-        // استخدام Nominatim API (OpenStreetMap)
         $url = 'https://nominatim.openstreetmap.org/search?q=' . urlencode($searchAddress) . '&format=json&limit=1&addressdetails=1';
 
         try {
@@ -81,7 +80,8 @@ class AdminController extends Controller
     {
         $governments = Government::with('category')->orderBy('created_at', 'desc')->get();
         $categories = GovernmentCategory::all();
-        return view('admin.governments', compact('governments', 'categories'));
+        $services = OfferService::orderBy('name')->get();
+        return view('admin.governments', compact('governments', 'categories', 'services'));
     }
 
     public function storeGovernment(Request $request)
@@ -119,7 +119,7 @@ class AdminController extends Controller
             $governmentData['images'] = $this->uploadImages($request->file('images'), $path);
         }
 
-        Government::create($governmentData);
+        $government = Government::create($governmentData);
 
         return redirect()->route('admin.governments')->with('success', 'تم إضافة الجهة بنجاح');
     }
@@ -138,6 +138,12 @@ class AdminController extends Controller
             'new_images' => 'nullable|array',
             'new_images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
             'remove_images' => 'nullable|array',
+            'services' => 'nullable|array',
+            'services.*.id' => 'exists:offer_services,id',
+            'services.*.description' => 'nullable|string',
+            'services.*.contact_number' => 'nullable|string|max:20',
+            'services.*.work_hours' => 'nullable|string|max:50',
+            'services.*.price' => 'nullable|string|max:100',
         ]);
 
         $governmentData = [
@@ -155,7 +161,6 @@ class AdminController extends Controller
             $governmentData['location_long'] = $location['lng'];
             $governmentData['address'] = $location['address'];
         } else {
-            // الاحتفاظ بالبيانات القديمة إذا لم يتم إدخال عنوان جديد
             $governmentData['location_lat'] = $government->location_lat;
             $governmentData['location_long'] = $government->location_long;
             $governmentData['address'] = $government->address;
@@ -164,7 +169,6 @@ class AdminController extends Controller
         // معالجة الصور الحالية
         $currentImages = $government->images ?? [];
 
-        // حذف الصور المحددة
         if ($request->has('remove_images')) {
             foreach ($request->remove_images as $index) {
                 if (isset($currentImages[$index])) {
@@ -175,7 +179,6 @@ class AdminController extends Controller
             $currentImages = array_values($currentImages);
         }
 
-        // إضافة صور جديدة
         if ($request->hasFile('new_images')) {
             $path = 'governments/' . $government->id;
             $newImages = $this->uploadImages($request->file('new_images'), $path);
@@ -185,6 +188,24 @@ class AdminController extends Controller
         $governmentData['images'] = $currentImages;
         $government->update($governmentData);
 
+        // معالجة الخدمات مع pivot
+        if ($request->has('services')) {
+            $servicesData = [];
+            foreach ($request->services as $serviceId => $details) {
+                if (isset($details['id'])) {
+                    $servicesData[$details['id']] = [
+                        'description' => $details['description'] ?? null,
+                        'contact_number' => $details['contact_number'] ?? null,
+                        'work_hours' => $details['work_hours'] ?? null,
+                        'price' => $details['price'] ?? null,
+                    ];
+                }
+            }
+            $government->services()->sync($servicesData);
+        } else {
+            $government->services()->detach();
+        }
+
         return redirect()->route('admin.governments')->with('success', 'تم تحديث الجهة بنجاح');
     }
 
@@ -192,7 +213,6 @@ class AdminController extends Controller
     {
         $government = Government::findOrFail($id);
 
-        // حذف الصور المرتبطة
         if ($government->images) {
             foreach ($government->images as $image) {
                 Storage::disk('public')->delete($image);
@@ -205,102 +225,97 @@ class AdminController extends Controller
     }
 
     // ==================== إدارة الخدمات ====================
-// ==================== إدارة الخدمات ====================
-public function services()
-{
-    $services = OfferService::with('category')->orderBy('created_at', 'desc')->get();
-    $categories = GovernmentCategory::all();
-    return view('admin.services', compact('services', 'categories'));
-}
-
-public function storeService(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:150',
-        'description' => 'nullable|string',
-        'category_id' => 'nullable|exists:government_categories,id',
-        'images' => 'nullable|array',
-        'images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
-    ]);
-
-    $serviceData = [
-        'name' => $request->name,
-        'description' => $request->description,
-        'government_category_id' => $request->category_id,
-    ];
-
-    // رفع الصور
-    if ($request->hasFile('images')) {
-        $path = 'services/' . time();
-        $serviceData['images'] = $this->uploadImages($request->file('images'), $path);
+    public function services()
+    {
+        $services = OfferService::with('category')->orderBy('created_at', 'desc')->get();
+        $categories = GovernmentCategory::all();
+        return view('admin.services', compact('services', 'categories'));
     }
 
-    OfferService::create($serviceData);
+    public function storeService(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:150',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:government_categories,id',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
+        ]);
 
-    return redirect()->route('admin.services')->with('success', 'تم إضافة الخدمة بنجاح');
-}
+        $serviceData = [
+            'name' => $request->name,
+            'description' => $request->description,
+            'government_category_id' => $request->category_id,
+        ];
 
-public function updateService(Request $request, $id)
-{
-    $service = OfferService::findOrFail($id);
+        if ($request->hasFile('images')) {
+            $path = 'services/' . time();
+            $serviceData['images'] = $this->uploadImages($request->file('images'), $path);
+        }
 
-    $request->validate([
-        'name' => 'required|string|max:150',
-        'description' => 'nullable|string',
-        'category_id' => 'nullable|exists:government_categories,id',
-        'new_images' => 'nullable|array',
-        'new_images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
-        'remove_images' => 'nullable|array',
-    ]);
+        OfferService::create($serviceData);
 
-    $serviceData = [
-        'name' => $request->name,
-        'description' => $request->description,
-        'government_category_id' => $request->category_id,
-    ];
+        return redirect()->route('admin.services')->with('success', 'تم إضافة الخدمة بنجاح');
+    }
 
-    // معالجة الصور الحالية
-    $currentImages = $service->images ?? [];
+    public function updateService(Request $request, $id)
+    {
+        $service = OfferService::findOrFail($id);
 
-    // حذف الصور المحددة
-    if ($request->has('remove_images')) {
-        foreach ($request->remove_images as $index) {
-            if (isset($currentImages[$index])) {
-                Storage::disk('public')->delete($currentImages[$index]);
-                unset($currentImages[$index]);
+        $request->validate([
+            'name' => 'required|string|max:150',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:government_categories,id',
+            'new_images' => 'nullable|array',
+            'new_images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
+            'remove_images' => 'nullable|array',
+        ]);
+
+        $serviceData = [
+            'name' => $request->name,
+            'description' => $request->description,
+            'government_category_id' => $request->category_id,
+        ];
+
+        $currentImages = $service->images ?? [];
+
+        if ($request->has('remove_images')) {
+            foreach ($request->remove_images as $index) {
+                if (isset($currentImages[$index])) {
+                    Storage::disk('public')->delete($currentImages[$index]);
+                    unset($currentImages[$index]);
+                }
+            }
+            $currentImages = array_values($currentImages);
+        }
+
+        if ($request->hasFile('new_images')) {
+            $path = 'services/' . $service->id;
+            $newImages = $this->uploadImages($request->file('new_images'), $path);
+            $currentImages = array_merge($currentImages, $newImages);
+        }
+
+        $serviceData['images'] = $currentImages;
+        $service->update($serviceData);
+
+        return redirect()->route('admin.services')->with('success', 'تم تحديث الخدمة بنجاح');
+    }
+
+    public function destroyService($id)
+    {
+        $service = OfferService::findOrFail($id);
+
+        if ($service->images) {
+            foreach ($service->images as $image) {
+                Storage::disk('public')->delete($image);
             }
         }
-        $currentImages = array_values($currentImages);
+
+        $service->delete();
+
+        return redirect()->route('admin.services')->with('success', 'تم حذف الخدمة بنجاح');
     }
 
-    // إضافة صور جديدة
-    if ($request->hasFile('new_images')) {
-        $path = 'services/' . $service->id;
-        $newImages = $this->uploadImages($request->file('new_images'), $path);
-        $currentImages = array_merge($currentImages, $newImages);
-    }
-
-    $serviceData['images'] = $currentImages;
-    $service->update($serviceData);
-
-    return redirect()->route('admin.services')->with('success', 'تم تحديث الخدمة بنجاح');
-}
-
-public function destroyService($id)
-{
-    $service = OfferService::findOrFail($id);
-
-    // حذف الصور المرتبطة
-    if ($service->images) {
-        foreach ($service->images as $image) {
-            Storage::disk('public')->delete($image);
-        }
-    }
-
-    $service->delete();
-
-    return redirect()->route('admin.services')->with('success', 'تم حذف الخدمة بنجاح');
-}
     // ==================== إدارة المستخدمين ====================
     public function users()
     {
