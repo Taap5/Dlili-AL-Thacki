@@ -3,88 +3,108 @@
 <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
         <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
+            <button id="closeSidebar" class="btn-close-custom">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="user-info">
                 @if(Auth::user()->profile_photo)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}"
-                         class="rounded-circle"
-                         style="width: 48px; height: 48px; object-fit: cover;">
+                    <div class="user-avatar">
+                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}"
+                             alt="{{ Auth::user()->user_name }}">
+                    </div>
                 @else
-                    <i class="fas fa-user-circle fa-3x text-primary"></i>
+                    <div class="user-avatar user-avatar-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
                 @endif
-                <div>
-                    <h5 class="mb-0 fw-bold">{{ Auth::user()->user_name }}</h5>
-                    <p class="text-muted small mb-0">{{ Auth::user()->email }}</p>
+                <div class="user-details">
+                    <h5 class="user-name">{{ Auth::user()->user_name }}</h5>
+                    <p class="user-email">{{ Auth::user()->email }}</p>
                 </div>
             </div>
-            <button id="closeSidebar" class="btn-close"></button>
         </div>
     </div>
+
     <div class="sidebar-body">
         <ul class="sidebar-menu">
             <li>
                 <a href="{{ route('dashboard') }}" class="sidebar-link">
-                    <i class="fas fa-tachometer-alt me-3"></i>
-                    <span>لوحة التحكم</span>
+                    <div class="sidebar-link-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <span class="sidebar-link-text">لوحة التحكم</span>
                 </a>
             </li>
             <li>
                 <a href="{{ route('profile') }}" class="sidebar-link">
-                    <i class="fas fa-id-card me-3"></i>
-                    <span>الملف الشخصي</span>
+                    <div class="sidebar-link-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <span class="sidebar-link-text">الملف الشخصي</span>
                 </a>
             </li>
             <li>
                 <a href="{{ route('favorites') }}" class="sidebar-link">
-                    <i class="fas fa-heart me-3"></i>
-                    <span>المفضلة</span>
+                    <div class="sidebar-link-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <span class="sidebar-link-text">المفضلة</span>
                 </a>
             </li>
             <li>
                 <a href="{{ route('my.reviews') }}" class="sidebar-link">
-                    <i class="fas fa-star me-3"></i>
-                    <span>تقييماتي</span>
+                    <div class="sidebar-link-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <span class="sidebar-link-text">تقييماتي</span>
                 </a>
             </li>
             <li>
                 <a href="{{ route('team') }}" class="sidebar-link">
-                    <i class="fas fa-users me-3"></i>
-                    <span>من نحن</span>
+                    <div class="sidebar-link-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <span class="sidebar-link-text">من نحن</span>
                 </a>
             </li>
+
             @if(Auth::user()->hasRole('admin'))
                 <li class="sidebar-divider"></li>
                 <li>
-                    <a href="{{ route('admin.dashboard') }}" class="sidebar-link text-danger">
-                        <i class="fas fa-shield-alt me-3"></i>
-                        <span>لوحة تحكم المسؤول</span>
+                    <a href="{{ route('admin.dashboard') }}" class="sidebar-link sidebar-link-admin">
+                        <div class="sidebar-link-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <span class="sidebar-link-text">لوحة تحكم المسؤول</span>
                     </a>
                 </li>
             @endif
         </ul>
     </div>
+
     <div class="sidebar-footer">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="sidebar-logout-btn">
-                <i class="fas fa-sign-out-alt me-2"></i>
-                تسجيل الخروج
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
             </button>
         </form>
     </div>
 </div>
 
 <style>
-    /* الشريط الجانبي */
+    /* ===== الشريط الجانبي ===== */
     .sidebar {
         position: fixed;
         top: 0;
-        right: -320px;
-        width: 300px;
+        right: -360px;
+        width: 340px;
         height: 100%;
-        background: #fff;
-        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #fef9f0 100%);
+        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.1);
         z-index: 1050;
-        transition: right 0.3s ease;
+        transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         flex-direction: column;
         direction: rtl;
@@ -94,31 +114,142 @@
         right: 0;
     }
 
+    /* الطبقة الخلفية */
     .sidebar-overlay {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
         z-index: 1040;
         display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
 
     .sidebar-overlay.active {
         display: block;
+        opacity: 1;
     }
 
+    /* ===== رأس الشريط ===== */
     .sidebar-header {
-        padding: 20px;
-        border-bottom: 1px solid #eee;
-        background: #f8f9fa;
+        padding: 30px 24px 24px;
+         background: linear-gradient(135deg, #5164c0 0%, #2a2f3e 100%);
+        position: relative;
+        overflow: hidden;
     }
 
+    .sidebar-header::before {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -20%;
+        width: 150%;
+        height: 150%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .btn-close-custom {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .btn-close-custom:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    .btn-close-custom i {
+        font-size: 18px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .user-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: linear-gradient(135deg, #ffffff, #f0f4ff);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        flex-shrink: 0;
+    }
+
+    .user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* لون خلفية الأيقونة الافتراضية - أغمق وأكثر وضوحاً */
+    .user-avatar-placeholder {
+        background: linear-gradient(135deg, #1e2a6e, #2f3e9e);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-avatar-placeholder i {
+        font-size: 32px;
+        color: white;
+    }
+
+    .user-details {
+        flex: 1;
+    }
+
+    .user-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 4px 0;
+    }
+
+    .user-email {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+    }
+
+    /* ===== جسم الشريط ===== */
     .sidebar-body {
         flex: 1;
         padding: 20px 0;
         overflow-y: auto;
+    }
+
+    /* تخصيص شريط التمرير */
+    .sidebar-body::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sidebar-body::-webkit-scrollbar-track {
+        background: #f0f0f0;
+    }
+
+    .sidebar-body::-webkit-scrollbar-thumb {
+        background: var(--primary-blue);
+        border-radius: 4px;
     }
 
     .sidebar-menu {
@@ -131,63 +262,180 @@
         margin: 0;
     }
 
+    /* روابط القائمة */
     .sidebar-link {
         display: flex;
         align-items: center;
-        padding: 12px 20px;
-        color: #333;
+        gap: 14px;
+        padding: 12px 24px;
+        color: #4a5568;
         text-decoration: none;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
         font-size: 15px;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .sidebar-link::before {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 70%;
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+        border-radius: 0 8px 8px 0;
+        transition: width 0.2s ease;
     }
 
     .sidebar-link:hover {
-        background: #f0f0f0;
+        background: #f0f4ff;
         color: var(--primary-blue);
     }
 
-    .sidebar-link i {
-        width: 24px;
-        text-align: center;
+    .sidebar-link:hover::before {
+        width: 4px;
     }
 
+    .sidebar-link-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f4ff;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .sidebar-link-icon i {
+        font-size: 16px;
+        color: var(--primary-blue);
+        transition: all 0.2s ease;
+    }
+
+    .sidebar-link:hover .sidebar-link-icon {
+        background: var(--primary-blue);
+    }
+
+    .sidebar-link:hover .sidebar-link-icon i {
+        color: white;
+    }
+
+    .sidebar-link-text {
+        flex: 1;
+    }
+
+    /* رابط لوحة تحكم المسؤول */
+    .sidebar-link-admin .sidebar-link-icon {
+        background: #fff0f0;
+    }
+
+    .sidebar-link-admin .sidebar-link-icon i {
+        color: #dc3545;
+    }
+
+    .sidebar-link-admin:hover .sidebar-link-icon {
+        background: #dc3545;
+    }
+
+    .sidebar-link-admin:hover .sidebar-link-icon i {
+        color: white;
+    }
+
+    /* الفاصل */
     .sidebar-divider {
         height: 1px;
-        background: #eee;
-        margin: 10px 0;
+        background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+        margin: 16px 24px;
     }
 
+    /* ===== تذييل الشريط ===== */
     .sidebar-footer {
-        padding: 15px 20px;
-        border-top: 1px solid #eee;
+        padding: 20px 24px 30px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .sidebar-logout-btn {
         width: 100%;
-        padding: 10px;
-        background: none;
-        border: none;
+        padding: 12px;
+        background: linear-gradient(135deg, #fff5f5, #ffffff);
+        border: 1px solid #f0d0d0;
+        border-radius: 12px;
         color: #dc3545;
         text-align: center;
         cursor: pointer;
-        font-size: 15px;
-        transition: all 0.2s;
-        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 10px;
+    }
+
+    .sidebar-logout-btn i {
+        font-size: 16px;
     }
 
     .sidebar-logout-btn:hover {
-        background: #fff0f0;
+        background: #dc3545;
+        border-color: #dc3545;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
     }
 
-    /* تحسين للهواتف */
+    /* ===== تحسين للهواتف ===== */
     @media (max-width: 576px) {
         .sidebar {
-            width: 280px;
-            right: -280px;
+            width: 300px;
+            right: -300px;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 20px;
+        }
+
+        .user-avatar {
+            width: 52px;
+            height: 52px;
+        }
+
+        .user-name {
+            font-size: 1rem;
+        }
+
+        .sidebar-link {
+            padding: 10px 20px;
+            gap: 12px;
+        }
+
+        .sidebar-link-icon {
+            width: 28px;
+            height: 28px;
+        }
+
+        .sidebar-link-icon i {
+            font-size: 14px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px 24px;
+        }
+
+        .sidebar-logout-btn {
+            padding: 10px;
+            font-size: 13px;
+        }
+    }
+
+    /* ===== تحسين للشاشات المتوسطة ===== */
+    @media (min-width: 577px) and (max-width: 768px) {
+        .sidebar {
+            width: 320px;
+            right: -320px;
         }
     }
 </style>

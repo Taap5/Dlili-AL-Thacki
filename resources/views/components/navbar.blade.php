@@ -54,7 +54,9 @@
                         <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" class="rounded-circle"
                             style="width: 32px; height: 32px; object-fit: cover;">
                     @else
-                        <i class="fas fa-user-circle"></i>
+                        <span class="user-icon-placeholder">
+                            <i class="fas fa-user"></i>
+                        </span>
                     @endif
                     <span class="user-name">{{ Auth::user()->user_name }}</span>
                 </button>
@@ -64,7 +66,7 @@
 </header>
 
 <style>
-    /* ===== هيدر جديد ===== */
+    /* ===== هيدر ===== */
     .mobile-header {
         background: #fff;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -75,7 +77,7 @@
         z-index: 1000;
     }
 
-    /* الشريط العلوي (الأزرق) */
+    /* الشريط العلوي */
     .top-bar {
         background: linear-gradient(135deg, #1a1f2e 0%, #2a2f3e 100%);
         color: #fff;
@@ -127,7 +129,7 @@
         gap: 8px;
     }
 
-    /* الشريط الرئيسي (الأبيض) */
+    /* الشريط الرئيسي */
     .main-bar {
         padding: 10px 16px;
         display: flex;
@@ -219,6 +221,7 @@
 
     .btn-guest:hover {
         background: #e8e8e8;
+        transform: translateY(-1px);
     }
 
     .btn-guest-primary {
@@ -227,8 +230,8 @@
     }
 
     .btn-guest-primary:hover {
-        background: linear-gradient(135deg, #25327a, #4a5fb0);
-        color: white;
+        background: linear-gradient(135deg, #1e2a6e, #2f3e9e);
+        box-shadow: 0 4px 10px rgba(47, 62, 158, 0.2);
     }
 
     /* زر المستخدم المسجل */
@@ -236,35 +239,52 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        background: #f5f5f5;
+           background: linear-gradient(135deg, #1a1f2e 0%, #2a2f3e 100%);
         border: none;
         padding: 6px 14px;
         border-radius: 40px;
         font-size: 14px;
         font-weight: 500;
-        color: #1a1f2e;
+        color: white;
         cursor: pointer;
         transition: all 0.2s;
         direction: rtl;
     }
 
-    .user-menu-btn i {
-        font-size: 24px;
-        color: #2f3e9e;
+    /* أيقونة المستخدم */
+    .user-menu-btn .user-icon-placeholder {
+        width: 28px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-menu-btn .user-icon-placeholder i {
+        font-size: 14px;
+        color: white;
     }
 
     .user-menu-btn img {
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
         object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.5);
     }
 
     .user-menu-btn:hover {
-        background: #e8e8e8;
+        background: linear-gradient(135deg, #1e2a6e, #2f3e9e);
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(47, 62, 158, 0.3);
     }
 
     .user-name {
+        color: white;
+        font-size: 13px;
+        font-weight: 500;
         max-width: 100px;
         white-space: nowrap;
         overflow: hidden;
@@ -324,15 +344,25 @@
 
         .user-menu-btn {
             padding: 4px 10px;
+        }
+
+        .user-menu-btn .user-icon-placeholder {
+            width: 24px;
+            height: 24px;
+        }
+
+        .user-menu-btn .user-icon-placeholder i {
             font-size: 12px;
         }
 
-        .user-menu-btn i {
-            font-size: 20px;
+        .user-menu-btn img {
+            width: 24px;
+            height: 24px;
         }
 
         .user-name {
-            max-width: 80px;
+            max-width: 70px;
+            font-size: 11px;
         }
     }
 

@@ -4,100 +4,172 @@
 
 @section('content')
 <style>
+    :root {
+        --primary: #2f3e9e;
+        --primary-light: #5a6fc9;
+        --primary-dark: #1e2a6e;
+        --secondary: #ffc107;
+        --bg-light: #fef9f0;
+        --text-dark: #1a2c3e;
+        --text-muted: #6c757d;
+    }
+
     .help-header {
-        background: linear-gradient(135deg, #2f3e9e 0%, #5a6fc9 100%);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
         color: white;
-        padding: 60px 0;
+        padding: 80px 0;
         text-align: center;
-        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .help-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 80%;
+        height: 150%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
     }
 
     .help-header h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 800;
-        margin-bottom: 15px;
+        margin-bottom: 16px;
+        animation: fadeInUp 0.6s ease;
     }
 
     .help-header p {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         opacity: 0.9;
         max-width: 700px;
         margin: 0 auto;
+        animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .section-title {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
         font-weight: 700;
-        margin: 40px 0 25px 0;
+        margin: 50px 0 30px 0;
         position: relative;
-        padding-bottom: 12px;
+        padding-right: 20px;
+        color: var(--text-dark);
     }
 
-    .section-title:after {
+    .section-title::before {
         content: '';
         position: absolute;
-        bottom: 0;
         right: 0;
-        width: 60px;
-        height: 3px;
-        background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
-        border-radius: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 4px;
     }
 
     .help-card {
         background: white;
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        transition: all 0.3s;
+        border-radius: 24px;
+        padding: 28px;
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+        border: 1px solid #f0f0f0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     }
 
     .help-card:hover {
-        box-shadow: 0 8px 25px rgba(47,62,158,0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(47, 62, 158, 0.08);
+        border-color: rgba(47, 62, 158, 0.15);
     }
 
     .help-card h3 {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        margin-bottom: 15px;
-        color: #2f3e9e;
+        margin-bottom: 20px;
+        color: var(--primary);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .help-card h3 i {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
+        background: linear-gradient(135deg, #f0f4ff, #e8eaf6);
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
     }
 
     .help-card p {
-        color: #555;
+        color: var(--text-muted);
         line-height: 1.7;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
+        font-size: 1rem;
     }
 
     .help-card ul {
         padding-right: 20px;
-        margin-top: 10px;
+        margin: 16px 0;
     }
 
     .help-card li {
-        margin-bottom: 8px;
-        color: #555;
+        margin-bottom: 10px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        position: relative;
+        padding-right: 20px;
     }
 
-    .help-card code {
-        background: #f5f5f5;
-        padding: 2px 8px;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        color: #2f3e9e;
+    .help-card li::before {
+        content: '•';
+        position: absolute;
+        right: 0;
+        color: var(--primary);
+        font-weight: bold;
+        font-size: 1.2rem;
     }
 
+    .help-card strong {
+        color: var(--text-dark);
+    }
+
+    .tip-box {
+        background: linear-gradient(135deg, #f0f4ff, #ffffff);
+        border-right: 4px solid var(--primary);
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-top: 16px;
+    }
+
+    .tip-box i {
+        color: var(--primary);
+        margin-left: 8px;
+    }
+
+    /* الأسئلة الشائعة */
     .faq-item {
-        border-bottom: 1px solid #eee;
-        padding: 15px 0;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 0;
     }
 
     .faq-item:last-child {
@@ -106,77 +178,119 @@
 
     .faq-question {
         font-weight: 700;
-        font-size: 1.1rem;
-        color: #1a2c3e;
+        font-size: 1.05rem;
+        color: var(--text-dark);
         cursor: pointer;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 18px 0;
+        transition: all 0.2s;
     }
 
     .faq-question:hover {
-        color: #2f3e9e;
+        color: var(--primary);
+    }
+
+    .faq-question i {
+        color: var(--primary);
+        transition: transform 0.2s;
     }
 
     .faq-answer {
-        padding-top: 10px;
-        color: #666;
+        padding: 0 0 20px 0;
+        color: var(--text-muted);
         line-height: 1.6;
+        display: none;
     }
 
+    .faq-answer code {
+        background: #f0f4ff;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: var(--primary);
+    }
+
+    /* بطاقة التواصل */
     .contact-card {
-        background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
-        border-radius: 20px;
-        padding: 30px;
+        background: linear-gradient(135deg, #f0f4ff, #ffffff);
+        border-radius: 28px;
+        padding: 40px;
         text-align: center;
-        margin-top: 30px;
+        margin: 40px 0 60px;
+        border: 1px solid rgba(47, 62, 158, 0.1);
     }
 
     .contact-card h4 {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
+        color: var(--text-dark);
+    }
+
+    .contact-card p {
+        color: var(--text-muted);
+        margin-bottom: 24px;
     }
 
     .contact-info {
         display: flex;
         justify-content: center;
-        gap: 30px;
+        gap: 20px;
         flex-wrap: wrap;
-        margin-top: 20px;
     }
 
     .contact-info a {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 8px;
-        color: #2f3e9e;
-        text-decoration: none;
-        padding: 8px 16px;
+        gap: 10px;
         background: white;
-        border-radius: 40px;
-        transition: all 0.3s;
+        color: var(--primary);
+        text-decoration: none;
+        padding: 12px 24px;
+        border-radius: 60px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(47, 62, 158, 0.2);
+        font-weight: 500;
     }
 
     .contact-info a:hover {
-        background: #2f3e9e;
+        background: var(--primary);
         color: white;
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(47, 62, 158, 0.2);
     }
 
+    /* استجابة للهواتف */
     @media (max-width: 768px) {
         .help-header h1 {
-            font-size: 1.8rem;
+            font-size: 2rem;
+        }
+        .help-header p {
+            font-size: 1rem;
+            padding: 0 20px;
         }
         .section-title {
             font-size: 1.4rem;
         }
+        .help-card h3 {
+            font-size: 1.2rem;
+        }
+        .help-card h3 i {
+            width: 40px;
+            height: 40px;
+            font-size: 1.4rem;
+        }
         .contact-info {
-            gap: 15px;
+            gap: 12px;
         }
         .contact-info a {
-            font-size: 12px;
-            padding: 6px 12px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+        .contact-card {
+            padding: 30px 20px;
         }
     }
 </style>
@@ -195,11 +309,14 @@
         <h3><i class="fas fa-search"></i> البحث عن خدمة أو جهة</h3>
         <p>يمكنك البحث عن الخدمات والجهات الحكومية بسهولة من خلال:</p>
         <ul>
-            <li><strong>شريط البحث الرئيسي:</strong> اكتب اسم الخدمة أو الجهة في مربع البحث، ثم اختر التصنيف المناسب من القائمة المنسدلة.</li>
+            <li><strong>شريط البحث الرئيسي:</strong> اكتب اسم الخدمة أو الجهة في مربع البحث، ثم اضغط زر البحث.</li>
             <li><strong>البطاقات الرئيسية:</strong> اضغط على أي بطاقة من بطاقات التصنيفات (مستشفيات، أقسام الشرطة، إلخ) لاستعراض جميع الجهات في هذا التصنيف.</li>
             <li><strong>الاقتراحات اللحظية:</strong> أثناء الكتابة في شريط البحث، ستظهر لك اقتراحات فورية للخدمات والجهات المتاحة.</li>
         </ul>
-        <p class="text-muted small mt-2"><i class="fas fa-lightbulb"></i> نصيحة: استخدم التصنيفات لتضييق نطاق البحث والحصول على نتائج أكثر دقة.</p>
+        <div class="tip-box">
+            <i class="fas fa-lightbulb"></i>
+            <strong>نصيحة:</strong> استخدم البحث المتقدم للحصول على نتائج أكثر دقة مع فلاتر إضافية.
+        </div>
     </div>
 
     <!-- كيفية إضافة تقييم -->
@@ -214,7 +331,10 @@
             <li>اختر عدد النجوم (من 1 إلى 5) وأضف تعليقك.</li>
             <li>اضغط <strong>"إرسال التقييم"</strong>.</li>
         </ul>
-        <p class="text-muted small mt-2"><i class="fas fa-info-circle"></i> ملاحظة: يمكنك إضافة تقييم واحد فقط لكل جهة. إذا أردت تعديل تقييمك، يمكنك حذفه وإضافته مرة أخرى.</p>
+        <div class="tip-box">
+            <i class="fas fa-info-circle"></i>
+            <strong>ملاحظة:</strong> يمكنك إضافة تقييم واحد فقط لكل جهة. يمكنك عرض جميع تقييماتك من صفحة "تقييماتي".
+        </div>
     </div>
 
     <!-- كيفية إضافة إلى المفضلة -->
@@ -226,7 +346,7 @@
             <li>سجل دخولك إلى حسابك.</li>
             <li>في صفحة الجهة أو الخدمة، اضغط على زر <strong>"أضف إلى المفضلة"</strong> (زر القلب).</li>
             <li>ستتحول الأيقونة إلى لون أحمر لتأكيد الإضافة.</li>
-            <li>يمكنك مشاهدة جميع مفضلاتك من خلال <strong>القائمة الجانبية</strong> ثم اختيار <strong>"المفضلة"</strong>.</li>
+            <li>يمكنك مشاهدة جميع مفضلاتك من خلال القائمة الجانبية ثم اختيار <strong>"المفضلة"</strong>.</li>
         </ul>
     </div>
 
@@ -242,9 +362,32 @@
             <li>اختر وسيلة النقل (سيارة أو مشي).</li>
             <li>ستظهر لك المسافة والوقت المقدر للوصول.</li>
         </ul>
-        <p class="text-muted small mt-2"><i class="fas fa-lock"></i> ملاحظة: هذه الميزة متاحة فقط للمستخدمين المسجلين.</p>
+        <div class="tip-box">
+            <i class="fas fa-lock"></i>
+            <strong>ملاحظة:</strong> هذه الميزة متاحة فقط للمستخدمين المسجلين.
+        </div>
     </div>
-
+<!-- ميزة الطوارئ (أقرب مستشفى) -->
+<div class="section-title">ميزة الطوارئ - أقرب مستشفى</div>
+<div class="help-card">
+    <h3><i class="fas fa-ambulance"></i> زر الطوارئ (أقرب مستشفى)</h3>
+    <p>في حالات الطوارئ، يمكنك استخدام زر الطوارئ العائم للعثور على أقرب مستشفى بسرعة:</p>
+    <ul>
+        <li><strong>موقع الزر:</strong> يظهر زر أحمر عائم في أسفل يسار الشاشة في الصفحة الرئيسية.</li>
+        <li><strong>كيفية الاستخدام:</strong> اضغط على الزر، واسمح للمتصفح بالوصول إلى موقعك الحالي.</li>
+        <li><strong>النتائج:</strong> ستعرض لك قائمة بأقرب 5 مستشفيات مرتبة حسب المسافة.</li>
+        <li><strong>المعلومات المعروضة:</strong> اسم المستشفى، المسافة التقريبية، الزمن المقدر للوصول، ورقم الهاتف إن وجد.</li>
+        <li><strong>عرض الاتجاهات:</strong> اضغط على "عرض الاتجاهات" للانتقال إلى صفحة المستشفى مع إمكانية رسم المسار.</li>
+    </ul>
+    <div class="tip-box">
+        <i class="fas fa-lightbulb"></i>
+        <strong>نصيحة:</strong> تأكد من تشغيل خدمة تحديد الموقع (GPS) للحصول على نتائج دقيقة. إذا رفضت مشاركة الموقع، يمكنك تحديث الصفحة والمحاولة مرة أخرى.
+    </div>
+    <div class="tip-box mt-2" style="background: #fff0f0; border-right-color: #dc3545;">
+        <i class="fas fa-heartbeat"></i>
+        <strong>معلومة مهمة:</strong> هذه الميزة مصممة خصيصاً لحالات الطوارئ لتوفير الوقت والوصول السريع إلى أقرب خدمة طبية.
+    </div>
+</div>
     <!-- الأسئلة الشائعة -->
     <div class="section-title">الأسئلة الشائعة</div>
     <div class="help-card">
@@ -253,8 +396,8 @@
                 <span>ما هي الخدمات المتوفرة على المنصة؟</span>
                 <i class="fas fa-chevron-down"></i>
             </div>
-            <div class="faq-answer" style="display: none;">
-                <p>توفر المنصة معلومات عن 4 أنواع رئيسية من الخدمات: المستشفيات الحكومية، مراكز الشرطة، مكاتب الأحوال المدنية، ومكاتب البريد الحكومية. سيتم إضافة المزيد من الخدمات مستقبلاً.</p>
+            <div class="faq-answer">
+                <p>توفر المنصة معلومات عن 4 أنواع رئيسية من الخدمات: <strong>المستشفيات الحكومية</strong>، <strong>مراكز الشرطة</strong>، <strong>مكاتب الأحوال المدنية</strong>، و<strong>مكاتب البريد الحكومية</strong>. سيتم إضافة المزيد من الخدمات مستقبلاً.</p>
             </div>
         </div>
         <div class="faq-item">
@@ -262,7 +405,7 @@
                 <span>هل التسجيل في الموقع إلزامي؟</span>
                 <i class="fas fa-chevron-down"></i>
             </div>
-            <div class="faq-answer" style="display: none;">
+            <div class="faq-answer">
                 <p>لا، يمكنك تصفح الموقع والبحث عن الخدمات والجهات دون تسجيل. ولكن التسجيل يتيح لك مزايا إضافية مثل: إضافة التقييمات، حفظ المفضلات، واستخدام ميزة الاتجاهات على الخريطة.</p>
             </div>
         </div>
@@ -271,8 +414,8 @@
                 <span>كيف يمكنني تعديل أو حذف تقييمي؟</span>
                 <i class="fas fa-chevron-down"></i>
             </div>
-            <div class="faq-answer" style="display: none;">
-                <p>حالياً، يمكنك حذف تقييمك من خلال الذهاب إلى صفحة <strong>"تقييماتي"</strong> في القائمة الجانبية، ثم الضغط على زر الحذف. ميزة تعديل التقييم ستتم إضافتها قريباً.</p>
+            <div class="faq-answer">
+                <p>يمكنك حذف تقييمك من خلال الذهاب إلى صفحة <strong>"تقييماتي"</strong> في القائمة الجانبية، ثم الضغط على زر الحذف. ميزة تعديل التقييم ستتم إضافتها قريباً.</p>
             </div>
         </div>
         <div class="faq-item">
@@ -280,7 +423,7 @@
                 <span>هل المعلومات الموجودة في الموقع محدثة؟</span>
                 <i class="fas fa-chevron-down"></i>
             </div>
-            <div class="faq-answer" style="display: none;">
+            <div class="faq-answer">
                 <p>نعم، يتم تحديث المعلومات بشكل دوري من خلال فريق العمل. إذا لاحظت أي معلومات غير دقيقة، يمكنك التواصل معنا للإبلاغ عنها.</p>
             </div>
         </div>
@@ -289,8 +432,8 @@
                 <span>كيف يمكنني الإبلاغ عن مشكلة أو اقتراح؟</span>
                 <i class="fas fa-chevron-down"></i>
             </div>
-            <div class="faq-answer" style="display: none;">
-                <p>يمكنك التواصل معنا عبر البريد الإلكتروني <code>info@dalili.com</code> أو من خلال وسائل التواصل الاجتماعي الموجودة في الفوتر.</p>
+            <div class="faq-answer">
+                <p>يمكنك التواصل معنا عبر البريد الإلكتروني <code>info@dalili.com</code> أو من خلال وسائل التواصل الاجتماعي الموجودة أدناه.</p>
             </div>
         </div>
     </div>
@@ -298,10 +441,9 @@
     <!-- طرق التواصل -->
     <div class="contact-card">
         <h4><i class="fas fa-headset"></i> تحتاج مساعدة إضافية؟</h4>
-        <p>فريق الدعم الفني جاهز لمساعدتك</p>
+        <p>فريق الدعم الفني جاهز لمساعدتك على مدار الساعة</p>
         <div class="contact-info">
             <a href="mailto:info@dalili.com"><i class="fas fa-envelope"></i> info@dalili.com</a>
-            <a href="tel:+9671234567"><i class="fas fa-phone"></i> +967 1 234 567</a>
             <a href="#"><i class="fab fa-facebook-messenger"></i> الماسنجر</a>
             <a href="#"><i class="fab fa-whatsapp"></i> واتساب</a>
         </div>
@@ -323,5 +465,17 @@
             icon.classList.add('fa-chevron-down');
         }
     }
+
+    // فتح أول سؤال بشكل افتراضي
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstFaq = document.querySelector('.faq-question');
+        if (firstFaq) {
+            const answer = firstFaq.nextElementSibling;
+            const icon = firstFaq.querySelector('i');
+            answer.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        }
+    });
 </script>
 @endsection

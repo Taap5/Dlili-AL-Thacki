@@ -1,213 +1,277 @@
-<footer class="mobile-footer">
-    <div class="container">
-        <!-- الروابط الرئيسية -->
-        <div class="footer-main">
-            <div class="footer-grid">
-                <!-- عن المنصة -->
-                <div class="footer-col">
-                    <h5 class="footer-title">عن دليلي الذكي</h5>
-                    <ul class="footer-links">
-                        <li><a href="{{ route('about') }}">عن المنصة</a></li>
-                        <li><a href="{{ route('about') }}#vision">رؤيتنا</a></li>
-                        <li><a href="{{ route('about') }}#mission">رسالتنا</a></li>
-                        <li><a href="{{ route('about') }}#team">فريق العمل</a></li>
-                    </ul>
-                </div>
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-row">
+            <!-- عن المنصة -->
+            <div class="footer-col">
+                <h5>عن دليلي الذكي</h5>
+                <ul>
+                    <li><a href="{{ route('about') }}"><i class="fas fa-info-circle"></i> عن المنصة</a></li>
+                    <li><a href="{{ route('about') }}#vision"><i class="fas fa-eye"></i> رؤيتنا</a></li>
+                    <li><a href="{{ route('about') }}#mission"><i class="fas fa-bullseye"></i> رسالتنا</a></li>
+                    <li><a href="{{ route('team') }}"><i class="fas fa-users"></i> فريق العمل</a></li>
+                </ul>
+            </div>
 
-                <!-- روابط سريعة -->
-                <div class="footer-col">
-                    <h5 class="footer-title">روابط سريعة</h5>
-                    <ul class="footer-links">
-                        <li><a href="{{ route('home') }}">الرئيسية</a></li>
-                        <li><a href="{{ route('services.index') }}">الخدمات</a></li>
-                        <li><a href="{{ route('governments.index') }}">الجهات الحكومية</a></li>
-                        <li><a href="{{ route('help') }}">المساعدة</a></li>
-                    </ul>
-                </div>
+            <!-- روابط سريعة -->
+            <div class="footer-col">
+                <h5>روابط سريعة</h5>
+                <ul>
+                    <li><a href="{{ route('home') }}"><i class="fas fa-home"></i> الرئيسية</a></li>
+                    <li><a href="{{ route('services.index') }}"><i class="fas fa-concierge-bell"></i> الخدمات</a></li>
+                    <li><a href="{{ route('governments.index') }}"><i class="fas fa-building"></i> الجهات الحكومية</a></li>
+                    <li><a href="{{ route('help') }}"><i class="fas fa-question-circle"></i> المساعدة</a></li>
+                </ul>
+            </div>
 
-                <!-- خدمات المستخدم -->
-                <div class="footer-col">
-                    <h5 class="footer-title">خدمات المستخدم</h5>
-                    <ul class="footer-links">
-                        @auth
-                            <li><a href="{{ route('profile') }}">الملف الشخصي</a></li>
-                            <li><a href="{{ route('favorites') }}">المفضلة</a></li>
-                            <li><a href="{{ route('my.reviews') }}">تقييماتي</a></li>
-                        @else
-                            <li><a href="{{ route('login') }}">تسجيل الدخول</a></li>
-                            <li><a href="{{ route('register') }}">إنشاء حساب</a></li>
-                        @endauth
-                    </ul>
-                </div>
+            <!-- خدمات المستخدم -->
+            <div class="footer-col">
+                <h5>خدمات المستخدم</h5>
+                <ul>
+                    @auth
+                        <li><a href="{{ route('profile') }}"><i class="fas fa-user-circle"></i> الملف الشخصي</a></li>
+                        <li><a href="{{ route('favorites') }}"><i class="fas fa-heart"></i> المفضلة</a></li>
+                        <li><a href="{{ route('my.reviews') }}"><i class="fas fa-star"></i> تقييماتي</a></li>
+                    @else
+                        <li><a href="{{ route('login') }}"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</a></li>
+                        <li><a href="{{ route('register') }}"><i class="fas fa-user-plus"></i> إنشاء حساب</a></li>
+                    @endauth
+                </ul>
+            </div>
 
-                <!-- تواصل معنا -->
-                <div class="footer-col">
-                    <h5 class="footer-title">تواصل معنا</h5>
-                    <ul class="footer-links">
-                        <li><i class="fas fa-envelope me-2"></i> info@dalili.com</li>
-                        <li><i class="fas fa-phone me-2"></i> +967 1 234 567</li>
-                    </ul>
-                    <div class="footer-social">
-                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                    </div>
+            <!-- تواصل معنا -->
+            <div class="footer-col">
+                <h5>تواصل معنا</h5>
+                <ul class="contact-list">
+                    <li><i class="fas fa-envelope"></i> <span>info@dalili.com</span></li>
+                    <li><i class="fas fa-phone-alt"></i> <span>+967 1 234 567</span></li>
+                    <li><i class="fas fa-map-marker-alt"></i> <span>اليمن - صنعاء</span></li>
+                </ul>
+                <div class="social-links">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
                 </div>
             </div>
         </div>
 
-        <!-- قسم حقوق النشر -->
-        <div class="footer-bottom">
-            <div class="footer-copyright">
-                <p>© {{ date('Y') }} دليلي الذكي. جميع الحقوق محفوظة</p>
-                <p class="small">منصة الخدمات الحكومية الموحدة</p>
-            </div>
+        <div class="footer-copyright">
+            <p>© {{ date('Y') }} <strong>دليلي الذكي</strong>. جميع الحقوق محفوظة</p>
+            <p class="small-text">منصة الخدمات الحكومية الموحدة</p>
         </div>
     </div>
 </footer>
 
 <style>
-    .mobile-footer {
-        background-color: #1a1f2e;
+    /* ===== تذييل الصفحة ===== */
+    .site-footer {
+        background: linear-gradient(135deg, #1a1f2e 0%, #2a2f3e 100%);
         color: #fff;
         font-family: "Cairo", sans-serif;
-        margin-top: auto;
-        padding: 40px 0 20px;
+        width: 100%;
+        padding: 50px 0 20px;
+        margin-top: 60px;
+        position: relative;
+        clear: both;
     }
 
-    .container {
+    .footer-inner {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0 15px;
+        padding: 0 20px;
     }
 
-    .footer-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    .footer-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
         gap: 30px;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
     }
 
-    .footer-title {
-        font-size: 18px;
+    .footer-col {
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .footer-col h5 {
+        font-size: 1.1rem;
         font-weight: 700;
         margin-bottom: 20px;
         position: relative;
-        padding-bottom: 10px;
+        padding-bottom: 12px;
+        color: #fff;
     }
 
-    .footer-title:after {
+    .footer-col h5::after {
         content: '';
         position: absolute;
         bottom: 0;
         right: 0;
-        width: 40px;
-        height: 2px;
-        background: #2f3e9e;
-        border-radius: 2px;
+        width: 45px;
+        height: 3px;
+        background: linear-gradient(90deg, #5a6fc9, #2f3e9e);
+        border-radius: 3px;
     }
 
-    .footer-links {
+    .footer-col ul {
         list-style: none;
         padding: 0;
         margin: 0;
     }
 
-    .footer-links li {
-        margin-bottom: 10px;
+    .footer-col ul li {
+        margin-bottom: 12px;
     }
 
-    .footer-links a {
+    .footer-col ul li a {
         color: rgba(255, 255, 255, 0.7);
         text-decoration: none;
         transition: all 0.3s;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
     }
 
-    .footer-links a:hover {
-        color: #fff;
+    .footer-col ul li a:hover {
+        color: #5a6fc9;
         transform: translateX(-5px);
     }
 
-    .footer-links i {
-        color: #2f3e9e;
-        width: 24px;
+    .footer-col ul li a i {
+        width: 20px;
+        font-size: 14px;
+        color: #5a6fc9;
     }
 
-    .footer-social {
+    .contact-list li {
         display: flex;
-        gap: 15px;
+        align-items: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+
+    .contact-list li i {
+        width: 20px;
+        font-size: 14px;
+        color: #5a6fc9;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 12px;
         margin-top: 20px;
     }
 
-    .social-link {
-        width: 36px;
-        height: 36px;
-        background: rgba(255, 255, 255, 0.1);
+    .social-icon {
+        width: 38px;
+        height: 38px;
+        background: rgba(255, 255, 255, 0.08);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
+        color: rgba(255, 255, 255, 0.8);
         text-decoration: none;
         transition: all 0.3s;
+        font-size: 16px;
     }
 
-    .social-link:hover {
-        background: #2f3e9e;
+    .social-icon:hover {
+        background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
+        color: white;
         transform: translateY(-3px);
     }
 
-    .footer-bottom {
+    .footer-copyright {
         text-align: center;
-        padding-top: 20px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 25px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .footer-copyright p {
         margin: 0;
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
     }
 
-    .footer-copyright .small {
-        font-size: 11px;
+    .footer-copyright strong {
+        color: #5a6fc9;
+        font-weight: 600;
+    }
+
+    .small-text {
+        font-size: 0.7rem;
         margin-top: 5px;
+        color: rgba(255, 255, 255, 0.4);
     }
 
-    /* تحسين للهواتف */
+    /* استجابة للشاشات المتوسطة */
+    @media (max-width: 992px) {
+        .footer-row {
+            gap: 40px;
+        }
+
+        .footer-col {
+            min-width: 200px;
+        }
+    }
+
+    /* استجابة للشاشات الصغيرة */
     @media (max-width: 768px) {
-        .mobile-footer {
-            padding: 30px 0 15px;
+        .site-footer {
+            padding: 40px 0 20px;
+            margin-top: 40px;
         }
-        .footer-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+
+        .footer-inner {
+            padding: 0 15px;
         }
-        .footer-title {
-            font-size: 16px;
+
+        .footer-row {
+            gap: 35px;
         }
-        .footer-links li {
-            font-size: 13px;
+
+        .footer-col h5 {
+            font-size: 1rem;
+        }
+
+        .footer-col ul li a,
+        .contact-list li {
+            font-size: 0.8rem;
         }
     }
 
-    @media (max-width: 480px) {
-        .footer-grid {
-            grid-template-columns: 1fr;
+    /* استجابة للهواتف */
+    @media (max-width: 576px) {
+        .footer-row {
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .footer-col {
             text-align: center;
         }
-        .footer-title:after {
+
+        .footer-col h5::after {
             left: 50%;
             right: auto;
             transform: translateX(-50%);
         }
-        .footer-social {
+
+        .footer-col ul li a {
             justify-content: center;
         }
-        .footer-links a:hover {
-            transform: none;
+
+        .contact-list li {
+            justify-content: center;
+        }
+
+        .social-links {
+            justify-content: center;
         }
     }
 </style>

@@ -8,10 +8,15 @@ use Illuminate\Http\Request;
 
 class OfferServiceController extends Controller
 {
-    // عرض جميع الخدمات (مع فلتر)
+    // عرض جميع الخدمات (مع بحث وفلتر)
     public function index(Request $request)
     {
         $query = OfferService::with(['category', 'governments']);
+
+        // البحث حسب الاسم
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
 
         // فلترة حسب التصنيف إذا وجد
         if ($request->has('category') && $request->category) {
@@ -80,7 +85,17 @@ class OfferServiceController extends Controller
 
     public function show($id)
     {
-        $service = OfferService::with('governments')->findOrFail($id);
-        return view('pages.services.show', compact('service'));
+        $service = OfferService::with(['governments' => function($query) {
+            $query->withPivot('description', 'contact_number', 'work_hours', 'price');
+        }, 'category'])->findOrFail($id);
+
+        // جلب خدمات مشابهة (نفس التصنيف)
+        $relatedServices = OfferService::where('government_category_id', $service->government_category_id)
+            ->where('id', '!=', $id)
+            ->with('governments')
+            ->limit(4)
+            ->get();
+
+        return view('pages.services.show', compact('service', 'relatedServices'));
     }
 }

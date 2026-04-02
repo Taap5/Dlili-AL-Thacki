@@ -8,6 +8,57 @@
     $images = $service->images ?? [];
 @endphp
 
+<style>
+    /* تنسيقات إضافية */
+    .government-service-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .government-service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+    }
+    .service-detail-badge {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 12px;
+    }
+    .service-detail-label {
+        font-size: 11px;
+        color: #6c757d;
+        margin-bottom: 4px;
+        display: block;
+    }
+    .service-detail-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: #2f3e9e;
+    }
+    .pivot-description {
+        background: #f0f4ff;
+        border-radius: 12px;
+        padding: 12px;
+        margin: 12px 0;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #1e2a6e;
+    }
+    .price-badge {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #dee2e6, transparent);
+        margin: 12px 0;
+    }
+</style>
+
 <div class="container py-4">
     <!-- بطاقة الخدمة الرئيسية -->
     <div class="card shadow-sm border-0 rounded-4 mb-5 overflow-hidden service-main-card">
@@ -20,9 +71,14 @@
             </div>
 
             <!-- اسم الخدمة مع شريط جانبي وزر المفضلة -->
-            <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                 <div class="service-name-wrapper">
                     <h1 class="fw-bold mb-3 service-name">{{ $service->name }}</h1>
+                    @if($service->category)
+                        <span class="badge bg-primary rounded-pill px-3 py-2">
+                            <i class="fas fa-tag me-1"></i> {{ $service->category->name }}
+                        </span>
+                    @endif
                 </div>
 
                 @auth
@@ -36,9 +92,9 @@
                 @endauth
             </div>
 
-            <!-- وصف الخدمة -->
+            <!-- وصف الخدمة العام -->
             @if($service->description)
-                <div class="service-description mb-4">
+                <div class="service-description mb-4 mt-3">
                     <p class="text-muted lead">{{ $service->description }}</p>
                 </div>
             @endif
@@ -56,9 +112,6 @@
                                  data-full-img="{{ asset('storage/' . $img) }}"
                                  alt="صورة الخدمة">
                         @endforeach
-                    </div>
-                    <div class="scroll-hint d-md-none">
-                        <i class="fas fa-chevron-left"></i> اسحب للمزيد <i class="fas fa-chevron-left"></i>
                     </div>
                 </div>
             @endif
@@ -90,15 +143,18 @@
                 <i class="fas fa-building text-primary me-2"></i>
                 الجهات التي تقدم هذه الخدمة
             </h3>
-            <p class="text-muted small">اختر الجهة المناسبة لتحصل على الخدمة</p>
+            <p class="text-muted small">اختر الجهة المناسبة لتحصل على الخدمة - تفاصيل الخدمة تختلف حسب الجهة</p>
         </div>
         <span class="badge bg-primary rounded-pill px-3 py-2">{{ $service->governments->count() }} جهة</span>
     </div>
 
-    <!-- قائمة الجهات - بطاقات منفردة -->
+    <!-- قائمة الجهات - بطاقات منفردة مع تفاصيل الخدمة لكل جهة -->
     @if($service->governments->count() > 0)
         <div class="row g-4">
             @foreach($service->governments as $government)
+                @php
+                    $pivot = $government->pivot;
+                @endphp
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="card government-service-card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
                         <!-- صورة الجهة (إذا وجدت) -->
@@ -134,22 +190,78 @@
                                 </a>
                             </h4>
 
-                            <p class="card-text text-muted small mb-3">
-                                {{ Str::limit($government->description ?? 'لا يوجد وصف', 80) }}
-                            </p>
-
-                            <!-- معلومات الاتصال -->
-                            <div class="government-contact mb-3">
-                                @if($government->contact_number)
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="fas fa-phone-alt text-primary me-2" style="width: 20px;"></i>
-                                        <span class="small">{{ $government->contact_number }}</span>
+                            <!-- تفاصيل الخدمة الخاصة بهذه الجهة (من pivot) -->
+                            @if($pivot)
+                                <!-- وصف الخدمة للجهة -->
+                                @if($pivot->description)
+                                    <div class="pivot-description">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        {{ $pivot->description }}
                                     </div>
                                 @endif
-                                @if($government->work_hours)
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-clock text-primary me-2" style="width: 20px;"></i>
-                                        <span class="small">{{ $government->work_hours }}</span>
+
+                                <div class="service-detail-badge">
+                                    <div class="row g-2">
+                                        @if($pivot->contact_number)
+                                            <div class="col-12">
+                                                <span class="service-detail-label">
+                                                    <i class="fas fa-phone-alt me-1"></i> رقم الاتصال الخاص
+                                                </span>
+                                                <div class="service-detail-value">
+                                                    <a href="tel:{{ $pivot->contact_number }}" class="text-decoration-none">
+                                                        {{ $pivot->contact_number }}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        @if($pivot->work_hours)
+                                            <div class="col-12">
+                                                <span class="service-detail-label">
+                                                    <i class="fas fa-clock me-1"></i> ساعات العمل لهذه الخدمة
+                                                </span>
+                                                <div class="service-detail-value">
+                                                    <i class="far fa-calendar-alt me-1 text-muted"></i>
+                                                    {{ $pivot->work_hours }}
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        @if($pivot->price)
+                                            <div class="col-12">
+                                                <span class="service-detail-label">
+                                                    <i class="fas fa-coins me-1"></i> الرسوم
+                                                </span>
+                                                <div class="service-detail-value">
+                                                    <span class="price-badge">
+                                                        <i class="fas fa-wallet me-1"></i> {{ $pivot->price }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- معلومات الاتصال العامة للجهة -->
+                            <div class="government-contact mt-3 pt-2">
+                                <div class="divider"></div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <small class="text-muted">
+                                        <i class="fas fa-phone-alt me-1"></i> هاتف الجهة:
+                                    </small>
+                                    <small class="fw-bold">
+                                        {{ $government->contact_number ?? 'غير متوفر' }}
+                                    </small>
+                                </div>
+                                @if($government->address)
+                                    <div class="d-flex align-items-center justify-content-between mt-1">
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt me-1"></i> العنوان:
+                                        </small>
+                                        <small class="fw-bold text-truncate" style="max-width: 150px;">
+                                            {{ Str::limit($government->address, 30) }}
+                                        </small>
                                     </div>
                                 @endif
                             </div>

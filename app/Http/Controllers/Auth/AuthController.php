@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EmailVerificationCode;
 
 class AuthController extends Controller
 {
@@ -31,7 +33,7 @@ class AuthController extends Controller
 
             // توجيه المسؤول إلى لوحة التحكم
             if (Auth::user()->hasRole('admin')) {
-                return redirect()->intended('/dashboard');
+                return redirect()->intended('/admin/dashboard');
             }
 
             // توجيه المستخدم العادي إلى الصفحة الرئيسية
@@ -111,14 +113,13 @@ class AuthController extends Controller
         return view('profile.index');
     }
 
-    // تحديث الملف الشخصي
+    // تحديث الملف الشخصي (بدون تغيير البريد)
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
 
         $request->validate([
             'user_name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'current_password' => 'nullable|string|required_with:password',
@@ -144,7 +145,6 @@ class AuthController extends Controller
         }
 
         $user->user_name = $request->user_name;
-        $user->email = $request->email;
         $user->phone = $request->phone;
 
         if ($request->filled('password')) {
@@ -154,6 +154,76 @@ class AuthController extends Controller
         $user->save();
 
         return redirect()->route('profile')->with('success', 'تم تحديث الملف الشخصي بنجاح');
+    }
+
+    // طلب تغيير البريد الإلكتروني
+    public function requestEmailChange(Request $request)
+    {
+        $request->validate([
+            'new_email' => 'required|email|unique:users,email',
+            'current_password' => 'required',
+        ]);
+
+        $user = Auth::user();
+
+        // التحقق من كلمة المرور الحالية
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'كلمة المرور الحالية غير صحيحة']);
+        }
+
+        // إنشاء رمز تحقق
+        $code = rand(100000, 999999);
+
+        // تخزين الرمز في الجلسة
+        session([
+            'pending_email_change' => $request->new_email,
+            'email_verification_code' => $code,
+            'email_verification_expires' => now()->addMinutes(10)
+        ]);
+
+        // إرسال رمز التحقق إلى البريد الجديد
+        Mail::to($request->new_email)->send(new EmailVerificationCode($code));
+
+        return redirect()->route('profile')->with('warning', 'تم إرسال رمز التحقق إلى البريد الإلكتروني الجديد. الرمز صالح لمدة 10 دقائق.');
+    }
+
+    // عرض صفحة تأكيد تغيير البريد
+    public function showConfirmEmailChange()
+    {
+        if (!session('pending_email_change')) {
+            return redirect()->route('profile')->with('error', 'لا يوجد طلب تغيير بريد نشط');
+        }
+        return view('auth.confirm-email-change');
+    }
+
+    // تأكيد تغيير البريد الإلكتروني
+    public function confirmEmailChange(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|digits:6',
+        ]);
+
+        $pendingEmail = session('pending_email_change');
+        $storedCode = session('email_verification_code');
+        $expires = session('email_verification_expires');
+
+        if (!$pendingEmail || !$storedCode || now()->gt($expires)) {
+            return redirect()->route('profile')->withErrors(['code' => 'طلب تغيير البريد غير صالح أو انتهت صلاحيته']);
+        }
+
+        if ($request->code != $storedCode) {
+            return back()->withErrors(['code' => 'رمز التحقق غير صحيح']);
+        }
+
+        $user = Auth::user();
+        $user->email = $pendingEmail;
+        $user->email_verified_at = null; // إعادة تعيين التحقق
+        $user->save();
+
+        // مسح الجلسة
+        session()->forget(['pending_email_change', 'email_verification_code', 'email_verification_expires']);
+
+        return redirect()->route('profile')->with('success', 'تم تغيير البريد الإلكتروني بنجاح. يرجى التحقق من بريدك الجديد لتأكيده.');
     }
 
     // حذف الصورة الشخصية

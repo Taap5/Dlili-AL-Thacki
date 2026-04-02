@@ -46,41 +46,88 @@ class AdminController extends Controller
     }
 
     // دالة لجلب الإحداثيات والعنوان من عنوان نصي
-    private function getLocationFromAddress($searchAddress)
-    {
-        if (empty($searchAddress)) {
-            return ['lat' => null, 'lng' => null, 'address' => null];
-        }
-
-        $url = 'https://nominatim.openstreetmap.org/search?q=' . urlencode($searchAddress) . '&format=json&limit=1&addressdetails=1';
-
-        try {
-            $response = Http::withHeaders([
-                'User-Agent' => 'Dalili-Al-Thacki/1.0'
-            ])->get($url);
-
-            $data = $response->json();
-
-            if (!empty($data) && isset($data[0])) {
-                return [
-                    'lat' => $data[0]['lat'],
-                    'lng' => $data[0]['lon'],
-                    'address' => $data[0]['display_name'] ?? $searchAddress
-                ];
-            }
-        } catch (\Exception $e) {
-            // في حالة فشل الاتصال بالـ API
-        }
-
+// دالة لجلب الإحداثيات والعنوان من عنوان نصي باللغة العربية
+private function getLocationFromAddress($searchAddress)
+{
+    if (empty($searchAddress)) {
         return ['lat' => null, 'lng' => null, 'address' => null];
     }
 
+    try {
+        $apiKey = env('LOCATIONIQ_KEY');
+
+        $response = Http::timeout(20)->get('https://us1.locationiq.com/v1/search.php', [
+            'key' => $apiKey,
+            'q' => $searchAddress,
+            'format' => 'json',
+            'limit' => 1,
+            'countrycodes' => 'ye',   // مهم لتسريع النتائج في اليمن
+            'accept-language' => 'ar' // <-- هذا السطر يجبر النتائج على العربية
+        ]);
+
+        $data = $response->json();
+
+        if (!empty($data) && isset($data[0])) {
+            return [
+                'lat' => $data[0]['lat'],
+                'lng' => $data[0]['lon'],
+                'address' => $data[0]['display_name']
+            ];
+        }
+
+    } catch (\Exception $e) {
+        \Log::error('LocationIQ error: ' . $e->getMessage());
+    }
+
+    return ['lat' => null, 'lng' => null, 'address' => null];
+}
+
+    // دالة لجلب الموقع من API عبر AJAX
+ public function getLocationApi(Request $request)
+{
+    $address = $request->query('address');
+
+    if (empty($address)) {
+        return response()->json(['error' => 'العنوان مطلوب'], 400);
+    }
+
+    $location = $this->getLocationFromAddress($address);
+
+    if ($location['lat'] && $location['lng']) {
+        return response()->json([
+            'success' => true,
+            'lat' => $location['lat'],
+            'lng' => $location['lng'],
+            'address' => $location['address'],
+            'search_query' => $address // لإظهار النص الذي بحثت عنه
+        ]);
+    }
+
+    return response()->json([
+        'success' => false,
+        'error' => 'لم يتم العثور على الموقع'
+    ], 404);
+}
+
     // ==================== إدارة الجهات ====================
-    public function governments()
+    public function governments(Request $request)
     {
-        $governments = Government::with('category')->orderBy('created_at', 'desc')->get();
+        $query = Government::with('category', 'services');
+
+        // البحث حسب الاسم
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        // فلترة حسب التصنيف
+        if ($request->has('category_id') && $request->category_id) {
+            $query->where('government_category_id', $request->category_id);
+        }
+
+        $governments = $query->orderBy('created_at', 'desc')->paginate(15);
         $categories = GovernmentCategory::all();
         $services = OfferService::orderBy('name')->get();
+
         return view('admin.governments', compact('governments', 'categories', 'services'));
     }
 
@@ -90,36 +137,63 @@ class AdminController extends Controller
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'search_address' => 'nullable|string|max:500',
-            'contact_number' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20',
             'work_hours' => 'nullable|string|max:50',
             'category_id' => 'required|exists:government_categories,id',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
+            'services' => 'nullable|array',
+            'services.*.id' => 'exists:offer_services,id',
+            'services.*.description' => 'nullable|string',
+            'services.*.contact_number' => 'nullable|string|max:20',
+            'services.*.work_hours' => 'nullable|string|max:50',
+            'services.*.price' => 'nullable|string|max:100',
+            'location_lat' => 'nullable|string',
+            'location_long' => 'nullable|string',
+            'formatted_address' => 'nullable|string',
         ]);
 
         $governmentData = [
             'name' => $request->name,
             'description' => $request->description,
-            'contact_number' => $request->contact_number,
+            'contact_number' => $request->phone,
             'work_hours' => $request->work_hours,
             'government_category_id' => $request->category_id,
         ];
 
-        // جلب الإحداثيات والعنوان من البحث
-        if ($request->filled('search_address')) {
+        // استخدام الحقول المخفية أولاً
+        if ($request->filled('location_lat') && $request->filled('location_long')) {
+            $governmentData['location_lat'] = $request->location_lat;
+            $governmentData['location_long'] = $request->location_long;
+            $governmentData['address'] = $request->formatted_address ?? $request->search_address;
+        } elseif ($request->filled('search_address')) {
             $location = $this->getLocationFromAddress($request->search_address);
             $governmentData['location_lat'] = $location['lat'];
             $governmentData['location_long'] = $location['lng'];
             $governmentData['address'] = $location['address'];
         }
 
-        // رفع الصور
         if ($request->hasFile('images')) {
             $path = 'governments/' . time();
             $governmentData['images'] = $this->uploadImages($request->file('images'), $path);
         }
 
         $government = Government::create($governmentData);
+
+        if ($request->has('services')) {
+            $servicesData = [];
+            foreach ($request->services as $serviceId => $details) {
+                if (isset($details['id'])) {
+                    $servicesData[$details['id']] = [
+                        'description' => $details['description'] ?? null,
+                        'contact_number' => $details['contact_number'] ?? null,
+                        'work_hours' => $details['work_hours'] ?? null,
+                        'price' => $details['price'] ?? null,
+                    ];
+                }
+            }
+            $government->services()->sync($servicesData);
+        }
 
         return redirect()->route('admin.governments')->with('success', 'تم إضافة الجهة بنجاح');
     }
@@ -132,7 +206,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'search_address' => 'nullable|string|max:500',
-            'contact_number' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20',
             'work_hours' => 'nullable|string|max:50',
             'category_id' => 'required|exists:government_categories,id',
             'new_images' => 'nullable|array',
@@ -144,18 +218,24 @@ class AdminController extends Controller
             'services.*.contact_number' => 'nullable|string|max:20',
             'services.*.work_hours' => 'nullable|string|max:50',
             'services.*.price' => 'nullable|string|max:100',
+            'location_lat' => 'nullable|string',
+            'location_long' => 'nullable|string',
+            'formatted_address' => 'nullable|string',
         ]);
 
         $governmentData = [
             'name' => $request->name,
             'description' => $request->description,
-            'contact_number' => $request->contact_number,
+            'contact_number' => $request->phone,
             'work_hours' => $request->work_hours,
             'government_category_id' => $request->category_id,
         ];
 
-        // جلب الإحداثيات والعنوان من البحث (إذا تم إدخال عنوان جديد)
-        if ($request->filled('search_address')) {
+        if ($request->filled('location_lat') && $request->filled('location_long')) {
+            $governmentData['location_lat'] = $request->location_lat;
+            $governmentData['location_long'] = $request->location_long;
+            $governmentData['address'] = $request->formatted_address ?? $request->search_address;
+        } elseif ($request->filled('search_address')) {
             $location = $this->getLocationFromAddress($request->search_address);
             $governmentData['location_lat'] = $location['lat'];
             $governmentData['location_long'] = $location['lng'];
@@ -166,7 +246,6 @@ class AdminController extends Controller
             $governmentData['address'] = $government->address;
         }
 
-        // معالجة الصور الحالية
         $currentImages = $government->images ?? [];
 
         if ($request->has('remove_images')) {
@@ -188,7 +267,6 @@ class AdminController extends Controller
         $governmentData['images'] = $currentImages;
         $government->update($governmentData);
 
-        // معالجة الخدمات مع pivot
         if ($request->has('services')) {
             $servicesData = [];
             foreach ($request->services as $serviceId => $details) {
@@ -225,10 +303,21 @@ class AdminController extends Controller
     }
 
     // ==================== إدارة الخدمات ====================
-    public function services()
+    public function services(Request $request)
     {
-        $services = OfferService::with('category')->orderBy('created_at', 'desc')->get();
+        $query = OfferService::with('category');
+
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        if ($request->has('category_id') && $request->category_id) {
+            $query->where('government_category_id', $request->category_id);
+        }
+
+        $services = $query->orderBy('created_at', 'desc')->paginate(15);
         $categories = GovernmentCategory::all();
+
         return view('admin.services', compact('services', 'categories'));
     }
 
@@ -317,9 +406,32 @@ class AdminController extends Controller
     }
 
     // ==================== إدارة المستخدمين ====================
-    public function users()
+    public function users(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $query = User::query();
+
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('user_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('role') && $request->role) {
+            if ($request->role === 'admin') {
+                $query->whereHas('roles', function($q) {
+                    $q->where('name', 'admin');
+                });
+            } elseif ($request->role === 'user') {
+                $query->whereDoesntHave('roles', function($q) {
+                    $q->where('name', 'admin');
+                });
+            }
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->paginate(15);
+
         return view('admin.users', compact('users'));
     }
 
@@ -347,5 +459,38 @@ class AdminController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users')->with('success', 'تم حذف المستخدم بنجاح');
+    }
+
+    // ==================== إدارة التقييمات ====================
+    public function reviews(Request $request)
+    {
+        $query = Review::with(['user', 'government']);
+
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($q2) use ($search) {
+                    $q2->where('user_name', 'like', "%{$search}%");
+                })->orWhereHas('government', function($q2) use ($search) {
+                    $q2->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->has('rating') && $request->rating) {
+            $query->where('rating', $request->rating);
+        }
+
+        $reviews = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return view('admin.reviews', compact('reviews'));
+    }
+
+    public function destroyReview($id)
+    {
+        $review = Review::findOrFail($id);
+        $review->delete();
+
+        return redirect()->route('admin.reviews')->with('success', 'تم حذف التقييم بنجاح');
     }
 }

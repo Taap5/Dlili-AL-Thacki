@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'دليلي الذكي')</title>
 
@@ -11,21 +10,22 @@
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
 
     <!-- Cairo Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Leaflet CSS (للخرائط) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <!-- CSS الخاص بالتطبيق -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
 
     @stack('styles')
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-    <!-- تضمين الشريط التنقل -->
+    <!-- شريط التنقل -->
     <x-navbar />
 
     <!-- المحتوى الرئيسي -->
@@ -33,20 +33,21 @@
         @yield('content')
     </main>
 
-    <!-- تضمين الفوتر -->
+    <!-- تذييل الصفحة -->
     <x-footer />
 
-    <!-- Bootstrap JS -->
-    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
-
-    <!-- JS الخاص بالتطبيق -->
-    <script src="{{ asset('js/app.js') }}"></script>
-
-    @stack('scripts')
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- الشريط الجانبي (للمستخدمين المسجلين) -->
     @auth
         <x-sidebar />
     @endauth
-</body>
 
+    <!-- JavaScript -->
+    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('js/app.js') }}"></script>
+
+    <!-- Leaflet JS (للخرائط) -->
+   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    @stack('scripts')
+</body>
 </html>

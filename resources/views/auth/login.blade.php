@@ -1,102 +1,76 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - دليلي الذكي</title>
-    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        .login-card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 2rem;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(47,62,158,0.3);
-        }
-        .form-control {
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid #e0e0e0;
-        }
-        .form-control:focus {
-            border-color: #2f3e9e;
-            box-shadow: 0 0 0 0.2rem rgba(47,62,158,0.25);
-        }
-    </style>
-</head>
-<body class="d-flex align-items-center">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="login-card">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-map-marked-alt fa-3x text-primary mb-3"></i>
-                        <h2 class="fw-bold">مرحباً بك</h2>
-                        <p class="text-muted">سجل دخولك للوصول إلى الخدمات</p>
-                    </div>
+@extends('layouts.auth')
 
-                    @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
-                    @if($errors->any())
-                        <div class="alert alert-danger">{{ $errors->first() }}</div>
-                    @endif
+@section('title', 'تسجيل الدخول - دليلي الذكي')
 
-                    <form method="POST" action="{{ route('login') }}">
-                        @csrf
-                        <div class="mb-3">
-                            <label class="form-label">البريد الإلكتروني</label>
-                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" required autofocus>
-                        </div>
+@section('content')
+<div class="logo-wrapper">
+    <div class="logo-icon">
+        <i class="fas fa-map-marked-alt"></i>
+    </div>
+    <div class="logo-text">دليلي الذكي</div>
+    <div class="logo-subtext">منصة الخدمات الحكومية</div>
+</div>
 
-                        <div class="mb-3">
-                            <label class="form-label">كلمة المرور</label>
-                            <input type="password" name="password" class="form-control" required>
-                        </div>
+<h2 class="auth-title">مرحباً بك</h2>
+<p class="auth-subtitle">سجل دخولك للوصول إلى الخدمات</p>
 
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" name="remember" id="remember">
-                            <label class="form-check-label" for="remember">تذكرني</label>
-                        </div>
+@if(session('success'))
+    <div class="alert-custom alert-success-custom">
+        <i class="fas fa-check-circle"></i>
+        <span>{{ session('success') }}</span>
+    </div>
+@endif
 
-                        <button type="submit" class="btn btn-primary w-100 mb-3">
-                            <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
-                        </button>
+@if($errors->any())
+    <div class="alert-custom alert-danger-custom">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ $errors->first() }}</span>
+    </div>
+@endif
 
-                        <div class="text-center">
-                            <a href="{{ route('password.request') }}" class="text-decoration-none small">نسيت كلمة المرور؟</a>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <div class="text-center">
-                            <p class="mb-0">ليس لديك حساب؟ <a href="{{ route('register') }}" class="text-primary fw-bold">إنشاء حساب جديد</a></p>
-                            <a href="/" class="btn btn-outline-secondary mt-3 w-100">
-                                <i class="fas fa-arrow-left me-2"></i>العودة للصفحة الرئيسية
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+<form method="POST" action="{{ route('login') }}">
+    @csrf
+    <div class="form-group">
+        <label class="form-label">البريد الإلكتروني</label>
+        <div class="input-group-custom">
+            <i class="fas fa-envelope"></i>
+            <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="example@domain.com" required autofocus>
         </div>
     </div>
-    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
-</body>
-</html>
+
+    <div class="form-group">
+        <label class="form-label">كلمة المرور</label>
+        <div class="input-group-custom">
+            <i class="fas fa-lock"></i>
+            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+    </div>
+
+    <div class="form-check mb-3">
+        <input type="checkbox" class="form-check-input" name="remember" id="remember">
+        <label class="form-check-label" for="remember">تذكرني</label>
+    </div>
+
+    <button type="submit" class="btn-primary">
+        <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+    </button>
+
+    <div class="auth-link">
+        <a href="{{ route('password.request') }}">نسيت كلمة المرور؟</a>
+    </div>
+
+    <div class="divider">
+        <span>أو</span>
+    </div>
+
+    <a href="{{ route('register') }}" class="btn-secondary">
+        <i class="fas fa-user-plus me-2"></i>إنشاء حساب جديد
+    </a>
+
+    <div class="auth-link">
+        <a href="/">
+            <i class="fas fa-arrow-left me-1"></i>العودة للصفحة الرئيسية
+        </a>
+    </div>
+</form>
+@endsection

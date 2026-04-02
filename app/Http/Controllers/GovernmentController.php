@@ -9,11 +9,17 @@ use Illuminate\Http\Request;
 
 class GovernmentController extends Controller
 {
-    // عرض جميع الجهات (مع فلتر)
+    // عرض جميع الجهات (مع بحث وفلتر)
     public function index(Request $request)
     {
         $query = Government::with(['category', 'reviews']);
 
+        // البحث حسب الاسم
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        // فلترة حسب التصنيف
         if ($request->has('category') && $request->category) {
             $query->where('government_category_id', $request->category);
         }
