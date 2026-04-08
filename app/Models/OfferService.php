@@ -11,6 +11,7 @@ class OfferService extends Model
         'description',
         'government_category_id',
         'images',
+         'icon_image',
     ];
 
     protected $casts = [

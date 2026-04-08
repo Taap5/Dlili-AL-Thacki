@@ -507,24 +507,7 @@
 
         <!-- ... باقي المحتوى ... -->
 
-        <!-- فريق العمل -->
-        <div class="section-title">فريق العمل</div>
-        <div class="team-grid" id="team">
-            <div class="team-card">
-                <div class="team-avatar">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <h4>أصيل العامري</h4>
-                <p>باحث ومطور رئيسي</p>
-            </div>
-            <div class="team-card">
-                <div class="team-avatar">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <h4>إياد الصلوي</h4>
-                <p>باحث ومطور</p>
-            </div>
-        </div>
+       
 
         <!-- المميزات -->
         <div class="section-title">ما يميز منصتنا</div>

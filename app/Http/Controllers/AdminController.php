@@ -46,68 +46,67 @@ class AdminController extends Controller
     }
 
     // دالة لجلب الإحداثيات والعنوان من عنوان نصي
-// دالة لجلب الإحداثيات والعنوان من عنوان نصي باللغة العربية
-private function getLocationFromAddress($searchAddress)
-{
-    if (empty($searchAddress)) {
+    // دالة لجلب الإحداثيات والعنوان من عنوان نصي باللغة العربية
+    private function getLocationFromAddress($searchAddress)
+    {
+        if (empty($searchAddress)) {
+            return ['lat' => null, 'lng' => null, 'address' => null];
+        }
+
+        try {
+            $apiKey = env('LOCATIONIQ_KEY');
+
+            $response = Http::timeout(20)->get('https://us1.locationiq.com/v1/search.php', [
+                'key' => $apiKey,
+                'q' => $searchAddress,
+                'format' => 'json',
+                'limit' => 1,
+                'countrycodes' => 'ye',   // مهم لتسريع النتائج في اليمن
+                'accept-language' => 'ar' // <-- هذا السطر يجبر النتائج على العربية
+            ]);
+
+            $data = $response->json();
+
+            if (!empty($data) && isset($data[0])) {
+                return [
+                    'lat' => $data[0]['lat'],
+                    'lng' => $data[0]['lon'],
+                    'address' => $data[0]['display_name']
+                ];
+            }
+        } catch (\Exception $e) {
+            \Log::error('LocationIQ error: ' . $e->getMessage());
+        }
+
         return ['lat' => null, 'lng' => null, 'address' => null];
     }
 
-    try {
-        $apiKey = env('LOCATIONIQ_KEY');
+    // دالة لجلب الموقع من API عبر AJAX
+    public function getLocationApi(Request $request)
+    {
+        $address = $request->query('address');
 
-        $response = Http::timeout(20)->get('https://us1.locationiq.com/v1/search.php', [
-            'key' => $apiKey,
-            'q' => $searchAddress,
-            'format' => 'json',
-            'limit' => 1,
-            'countrycodes' => 'ye',   // مهم لتسريع النتائج في اليمن
-            'accept-language' => 'ar' // <-- هذا السطر يجبر النتائج على العربية
-        ]);
-
-        $data = $response->json();
-
-        if (!empty($data) && isset($data[0])) {
-            return [
-                'lat' => $data[0]['lat'],
-                'lng' => $data[0]['lon'],
-                'address' => $data[0]['display_name']
-            ];
+        if (empty($address)) {
+            return response()->json(['error' => 'العنوان مطلوب'], 400);
         }
 
-    } catch (\Exception $e) {
-        \Log::error('LocationIQ error: ' . $e->getMessage());
-    }
+        $location = $this->getLocationFromAddress($address);
 
-    return ['lat' => null, 'lng' => null, 'address' => null];
-}
+        if ($location['lat'] && $location['lng']) {
+            return response()->json([
+                'success' => true,
+                'lat' => $location['lat'],
+                'lng' => $location['lng'],
+                'address' => $location['address'],
+                'search_query' => $address // لإظهار النص الذي بحثت عنه
+            ]);
+        }
 
-    // دالة لجلب الموقع من API عبر AJAX
- public function getLocationApi(Request $request)
-{
-    $address = $request->query('address');
-
-    if (empty($address)) {
-        return response()->json(['error' => 'العنوان مطلوب'], 400);
-    }
-
-    $location = $this->getLocationFromAddress($address);
-
-    if ($location['lat'] && $location['lng']) {
         return response()->json([
-            'success' => true,
-            'lat' => $location['lat'],
-            'lng' => $location['lng'],
-            'address' => $location['address'],
-            'search_query' => $address // لإظهار النص الذي بحثت عنه
-        ]);
+            'success' => false,
+            'error' => 'لم يتم العثور على الموقع'
+        ], 404);
     }
-
-    return response()->json([
-        'success' => false,
-        'error' => 'لم يتم العثور على الموقع'
-    ], 404);
-}
 
     // ==================== إدارة الجهات ====================
     public function governments(Request $request)
@@ -324,48 +323,72 @@ private function getLocationFromAddress($searchAddress)
     public function storeService(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:150',
+            'group_name' => 'nullable|string|max:100',
+            'service_name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:government_categories,id',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
+            'icon_image' => 'nullable|image|mimes:jpg,jpeg,png,gif,svg|max:2048', // أضف هذا
         ]);
 
+        // دمج الحقلين
+        $finalName = trim($request->service_name);
+        if ($request->filled('group_name')) {
+            $finalName = trim($request->group_name) . ' - ' . trim($request->service_name);
+        }
+
         $serviceData = [
-            'name' => $request->name,
+            'name' => $finalName,
             'description' => $request->description,
             'government_category_id' => $request->category_id,
         ];
 
+        // رفع الصور المتعددة
         if ($request->hasFile('images')) {
             $path = 'services/' . time();
             $serviceData['images'] = $this->uploadImages($request->file('images'), $path);
+        }
+
+        // رفع أيقونة الخدمة (صورة واحدة)
+        if ($request->hasFile('icon_image')) {
+            $iconPath = $request->file('icon_image')->store('services/icons', 'public');
+            $serviceData['icon_image'] = $iconPath;
         }
 
         OfferService::create($serviceData);
 
         return redirect()->route('admin.services')->with('success', 'تم إضافة الخدمة بنجاح');
     }
-
     public function updateService(Request $request, $id)
     {
         $service = OfferService::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|max:150',
+            'group_name' => 'nullable|string|max:100',
+            'service_name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:government_categories,id',
             'new_images' => 'nullable|array',
             'new_images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
             'remove_images' => 'nullable|array',
+            'icon_image' => 'nullable|image|mimes:jpg,jpeg,png,gif,svg|max:2048', // أضف هذا
+            'remove_icon' => 'nullable|boolean', // أضف هذا
         ]);
 
+        // دمج الحقلين
+        $finalName = trim($request->service_name);
+        if ($request->filled('group_name')) {
+            $finalName = trim($request->group_name) . ' - ' . trim($request->service_name);
+        }
+
         $serviceData = [
-            'name' => $request->name,
+            'name' => $finalName,
             'description' => $request->description,
             'government_category_id' => $request->category_id,
         ];
 
+        // معالجة الصور المتعددة
         $currentImages = $service->images ?? [];
 
         if ($request->has('remove_images')) {
@@ -385,26 +408,52 @@ private function getLocationFromAddress($searchAddress)
         }
 
         $serviceData['images'] = $currentImages;
+
+        // ========== معالجة أيقونة الخدمة ==========
+
+        // حذف الأيقونة إذا طلب المستخدم
+        if ($request->has('remove_icon') && $request->remove_icon == 1) {
+            if ($service->icon_image) {
+                Storage::disk('public')->delete($service->icon_image);
+            }
+            $serviceData['icon_image'] = null;
+        }
+
+        // رفع أيقونة جديدة (تحل محل القديمة)
+        if ($request->hasFile('icon_image')) {
+            // حذف الأيقونة القديمة إن وجدت
+            if ($service->icon_image) {
+                Storage::disk('public')->delete($service->icon_image);
+            }
+            $iconPath = $request->file('icon_image')->store('services/icons', 'public');
+            $serviceData['icon_image'] = $iconPath;
+        }
+
         $service->update($serviceData);
 
         return redirect()->route('admin.services')->with('success', 'تم تحديث الخدمة بنجاح');
     }
 
-    public function destroyService($id)
-    {
-        $service = OfferService::findOrFail($id);
+ public function destroyService($id)
+{
+    $service = OfferService::findOrFail($id);
 
-        if ($service->images) {
-            foreach ($service->images as $image) {
-                Storage::disk('public')->delete($image);
-            }
+    // حذف الصور المتعددة
+    if ($service->images) {
+        foreach ($service->images as $image) {
+            Storage::disk('public')->delete($image);
         }
-
-        $service->delete();
-
-        return redirect()->route('admin.services')->with('success', 'تم حذف الخدمة بنجاح');
     }
 
+    // حذف أيقونة الخدمة
+    if ($service->icon_image) {
+        Storage::disk('public')->delete($service->icon_image);
+    }
+
+    $service->delete();
+
+    return redirect()->route('admin.services')->with('success', 'تم حذف الخدمة بنجاح');
+}
     // ==================== إدارة المستخدمين ====================
     public function users(Request $request)
     {
@@ -412,19 +461,19 @@ private function getLocationFromAddress($searchAddress)
 
         if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('user_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         if ($request->has('role') && $request->role) {
             if ($request->role === 'admin') {
-                $query->whereHas('roles', function($q) {
+                $query->whereHas('roles', function ($q) {
                     $q->where('name', 'admin');
                 });
             } elseif ($request->role === 'user') {
-                $query->whereDoesntHave('roles', function($q) {
+                $query->whereDoesntHave('roles', function ($q) {
                     $q->where('name', 'admin');
                 });
             }
@@ -468,10 +517,10 @@ private function getLocationFromAddress($searchAddress)
 
         if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('user', function($q2) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($q2) use ($search) {
                     $q2->where('user_name', 'like', "%{$search}%");
-                })->orWhereHas('government', function($q2) use ($search) {
+                })->orWhereHas('government', function ($q2) use ($search) {
                     $q2->where('name', 'like', "%{$search}%");
                 });
             });

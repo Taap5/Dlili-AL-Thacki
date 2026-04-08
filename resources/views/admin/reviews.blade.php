@@ -671,5 +671,34 @@ window.onclick = function(event) {
 }
     };
     </script>
+@push('scripts')
+<script>
+    // منع تكرار إدخالات الـ History بعد حفظ البيانات
+    (function() {
+        // التحقق من وجود رسالة نجاح (يعني تم حفظ البيانات)
+        @if(session('success'))
+            // استبدال الصفحة الحالية في التاريخ لمنع الرجوع إلى نموذج التعديل/الإضافة
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        @endif
 
+        // عند إرسال أي نموذج، منع إضافة صفحة جديدة في التاريخ
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                // حفظ عنوان الصفحة الحالية قبل الإرسال
+                sessionStorage.setItem('lastListPage', window.location.href);
+            });
+        });
+
+        // إذا كنا قد عدنا من صفحة حفظ، نستبدل التاريخ
+        if (sessionStorage.getItem('lastListPage') && window.location.href === sessionStorage.getItem('lastListPage')) {
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+            sessionStorage.removeItem('lastListPage');
+        }
+    })();
+</script>
+@endpush
 @endsection

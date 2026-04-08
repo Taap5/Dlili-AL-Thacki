@@ -5,6 +5,15 @@
 
 @section('content')
 <style>
+    /* منع انعكاس الأرقام في أرقام الاتصال */
+.service-modal-details .info-box .info-value a,
+.contact-value a,
+[dir="ltr"],
+.phone-number {
+    direction: ltr !important;
+    display: inline-block !important;
+    unicode-bidi: embed !important;
+}
     :root {
         --primary: #2f3e9e;
         --primary-light: #5a6fc9;
@@ -1198,6 +1207,7 @@ async function fetchLocationFromAddress(address, type = 'add') {
         }
     }
 }
+
     // مراقبة التغييرات في حقل البحث عن الموقع
     function initLocationSearch() {
         const addSearchInput = document.getElementById('add_search_address');
@@ -1660,5 +1670,37 @@ async function fetchLocationFromAddress(address, type = 'add') {
     document.addEventListener('DOMContentLoaded', function() {
         initLocationSearch();
     });
+
+
 </script>
+@push('scripts')
+<script>
+    // منع تكرار إدخالات الـ History بعد حفظ البيانات
+    (function() {
+        // التحقق من وجود رسالة نجاح (يعني تم حفظ البيانات)
+        @if(session('success'))
+            // استبدال الصفحة الحالية في التاريخ لمنع الرجوع إلى نموذج التعديل/الإضافة
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        @endif
+
+        // عند إرسال أي نموذج، منع إضافة صفحة جديدة في التاريخ
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                // حفظ عنوان الصفحة الحالية قبل الإرسال
+                sessionStorage.setItem('lastListPage', window.location.href);
+            });
+        });
+
+        // إذا كنا قد عدنا من صفحة حفظ، نستبدل التاريخ
+        if (sessionStorage.getItem('lastListPage') && window.location.href === sessionStorage.getItem('lastListPage')) {
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+            sessionStorage.removeItem('lastListPage');
+        }
+    })();
+</script>
+@endpush
 @endsection

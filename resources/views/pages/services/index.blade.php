@@ -471,8 +471,15 @@
             @foreach($services as $service)
                 <div class="service-card">
                     <div class="card-body">
-                        <div class="service-icon">
-                            <i class="fas fa-concierge-bell"></i>
+<div class="service-icon">
+    @if($service->icon_image)
+        <img src="{{ asset('storage/' . $service->icon_image) }}"
+             alt="{{ $service->name }}"
+             style="width: 50px; height: 50px; object-fit: contain;">
+    @else
+        <i class="fas fa-ambulance fa-2x"></i>
+    @endif
+</div>
                         </div>
 
                         <h3 class="service-title">
