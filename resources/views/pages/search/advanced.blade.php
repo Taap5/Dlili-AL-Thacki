@@ -1,73 +1,166 @@
 @extends('layouts.app')
 
-@section('title', 'بحث متقدم')
+@section('title', 'بحث متقدم - دليلي الذكي')
 
 @section('content')
 <style>
-    .advanced-search-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
+    :root {
+        --primary: #2f3e9e;
+        --primary-light: #5a6fc9;
+        --primary-dark: #1a2366;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --border-light: rgba(47, 62, 158, 0.1);
+        --card-shadow: 0 20px 35px -12px rgba(47, 62, 158, 0.15);
     }
 
-    .advanced-search-card {
-        background: #fff;
-        border-radius: 24px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        padding: 30px;
-        margin-bottom: 30px;
-        transition: all 0.3s ease;
+    .advanced-search-page {
+        background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .advanced-search-page::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(47, 62, 158, 0.05) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: floatBg 25s infinite ease-in-out;
+    }
+
+    .advanced-search-page::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -50px;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(90, 111, 201, 0.04) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: floatBg 20s infinite ease-in-out reverse;
+    }
+
+    @keyframes floatBg {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -30px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    .container-custom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-custom {
+        margin-bottom: 1.5rem;
+    }
+
+    .breadcrumb-custom a {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+
+    .breadcrumb-custom a:hover {
+        text-decoration: underline;
+    }
+
+    .breadcrumb-custom .separator {
+        color: var(--text-muted);
+        margin: 0 0.5rem;
+    }
+
+    .breadcrumb-custom .current {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    /* Search Card */
+    .search-card {
+        background: white;
+        border-radius: 28px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-light);
+        box-shadow: var(--card-shadow);
     }
 
     .search-title {
-        font-size: 28px;
-        font-weight: bold;
-        color: #2f3e9e;
-        margin-bottom: 30px;
+        font-size: 1.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--text-dark), var(--primary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
         text-align: center;
+        margin-bottom: 1.5rem;
     }
 
     .search-title i {
-        margin-left: 10px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
     }
 
-    .form-section {
-        margin-bottom: 25px;
-    }
-
-    .form-section-title {
-        font-weight: 600;
-        color: #1a2c3e;
-        margin-bottom: 15px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #e9ecef;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .form-section-title i {
-        color: #2f3e9e;
-        font-size: 18px;
+    /* Search Input */
+    .search-input-wrapper {
+        margin-bottom: 1.5rem;
     }
 
     .search-input-large {
         width: 100%;
-        padding: 14px 18px;
-        border: 1px solid #ddd;
-        border-radius: 14px;
-        font-size: 16px;
-        font-family: "Cairo", sans-serif;
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--border-light);
+        border-radius: 60px;
+        font-size: 1rem;
         transition: all 0.2s;
+        background: #fafafa;
     }
 
     .search-input-large:focus {
         outline: none;
-        border-color: #2f3e9e;
+        border-color: var(--primary);
+        background: white;
         box-shadow: 0 0 0 3px rgba(47, 62, 158, 0.1);
     }
 
-    /* قسم الفلاتر القابلة للطي */
+    /* Toggle Filters Button */
+    .toggle-filters-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.8rem;
+        background: #f8fafc;
+        border: 1px solid var(--border-light);
+        border-radius: 60px;
+        color: var(--primary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 1.5rem;
+    }
+
+    .toggle-filters-btn:hover {
+        background: #f0f4ff;
+        border-color: var(--primary);
+    }
+
+    /* Filters Wrapper */
     .filters-wrapper {
         transition: all 0.3s ease;
         overflow: hidden;
@@ -87,137 +180,140 @@
         visibility: visible;
     }
 
-    .toggle-filters-btn {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 40px;
-        padding: 10px 20px;
-        color: #2f3e9e;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 20px;
-    }
-
-    .toggle-filters-btn:hover {
-        background: #e8eaf6;
-        border-color: #2f3e9e;
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
     }
 
     .filter-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1rem;
     }
 
-    .filter-column {
-        flex: 1;
-        min-width: 200px;
+    .filter-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .filter-title i {
+        color: var(--primary);
     }
 
     .filter-option {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 0;
+        gap: 0.5rem;
+        padding: 0.4rem 0;
         cursor: pointer;
     }
 
     .filter-option input {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         cursor: pointer;
     }
 
     .filter-option label {
         cursor: pointer;
+        font-size: 0.85rem;
+        color: var(--text-muted);
         margin: 0;
-        color: #4a5568;
     }
 
     .rating-stars {
-        color: #ffc107;
-        font-size: 14px;
+        color: #fbbf24;
+        font-size: 0.7rem;
     }
 
-    .search-btn-advanced {
-        background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
+    /* Search Button */
+    .search-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
         border: none;
-        border-radius: 14px;
-        padding: 14px 32px;
+        border-radius: 60px;
+        padding: 1rem 2rem;
         color: white;
         font-weight: 600;
-        font-size: 16px;
+        font-size: 1rem;
         cursor: pointer;
         transition: all 0.2s;
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 10px;
-        width: 100%;
         justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
     }
 
-    .search-btn-advanced:hover {
+    .search-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(47, 62, 158, 0.3);
+        box-shadow: 0 6px 20px rgba(47, 62, 158, 0.3);
     }
 
     .reset-link {
         text-align: center;
-        margin-top: 15px;
+        margin-top: 1rem;
     }
 
     .reset-link a {
-        color: #6c757d;
+        color: var(--text-muted);
         text-decoration: none;
-        font-size: 14px;
+        font-size: 0.8rem;
         cursor: pointer;
     }
 
     .reset-link a:hover {
-        color: #2f3e9e;
+        color: var(--primary);
     }
 
-    /* تنسيقات النتائج */
+    /* Results Section */
     .results-section {
-        background: #fff;
-        border-radius: 24px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        padding: 30px;
-        transition: all 0.3s ease;
+        background: white;
+        border-radius: 28px;
+        padding: 2rem;
+        border: 1px solid var(--border-light);
+        box-shadow: var(--card-shadow);
+        display: none;
     }
 
     .results-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
         flex-wrap: wrap;
-        gap: 15px;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-light);
     }
 
     .results-count {
-        font-size: 16px;
-        color: #6c757d;
+        font-size: 0.9rem;
+        color: var(--text-muted);
     }
 
     .results-count strong {
-        color: #2f3e9e;
-        font-size: 20px;
+        color: var(--primary);
+        font-size: 1.2rem;
     }
 
     .loading-spinner {
         text-align: center;
-        padding: 50px;
+        padding: 3rem;
         display: none;
     }
 
     .loading-spinner i {
-        font-size: 40px;
-        color: #2f3e9e;
+        font-size: 2rem;
+        color: var(--primary);
         animation: spin 1s linear infinite;
     }
 
@@ -226,151 +322,159 @@
         100% { transform: rotate(360deg); }
     }
 
+    /* Result Cards */
+    .results-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
     .result-card {
-        border: 1px solid #e9ecef;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 15px;
-        transition: all 0.2s;
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.2rem;
         cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid var(--border-light);
     }
 
     .result-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        border-color: #2f3e9e;
+        border-color: var(--primary);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     }
 
     .result-header {
         display: flex;
         justify-content: space-between;
-        align-items: start;
+        align-items: flex-start;
         flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 12px;
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
     }
 
     .result-name {
-        font-size: 18px;
-        font-weight: bold;
-        color: #1a2c3e;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .result-name i {
-        margin-left: 8px;
-        font-size: 18px;
+        color: var(--primary);
     }
 
     .result-rating {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 0.3rem;
     }
 
     .stars {
-        color: #ffc107;
-        font-size: 14px;
+        color: #fbbf24;
+        font-size: 0.7rem;
     }
 
     .rating-value {
         font-weight: 600;
-        color: #1a2c3e;
+        font-size: 0.85rem;
     }
 
     .reviews-count {
-        color: #6c757d;
-        font-size: 12px;
+        font-size: 0.7rem;
+        color: var(--text-muted);
     }
 
     .result-details {
         display: flex;
         flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 15px;
-        font-size: 14px;
-        color: #6c757d;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
     }
 
     .result-details span {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.3rem;
     }
 
     .result-details i {
-        width: 16px;
-        color: #2f3e9e;
+        color: var(--primary);
     }
 
     .result-badges {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
     }
 
     .badge-category {
-        background: #e8eaf6;
-        color: #2f3e9e;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 12px;
+        background: #f0f4ff;
+        color: var(--primary);
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
     }
 
     .badge-type {
-        background: #e3f2fd;
-        color: #1976d2;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 12px;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
     }
 
     .result-footer {
-        margin-top: 15px;
-        padding-top: 12px;
-        border-top: 1px solid #e9ecef;
         display: flex;
         justify-content: flex-end;
+        padding-top: 0.8rem;
+        border-top: 1px solid var(--border-light);
     }
 
     .view-btn {
-        background: none;
-        border: 1px solid #2f3e9e;
-        border-radius: 30px;
-        padding: 6px 16px;
-        color: #2f3e9e;
-        font-size: 13px;
+        background: transparent;
+        border: 1px solid var(--primary);
+        border-radius: 40px;
+        padding: 0.3rem 1rem;
+        color: var(--primary);
+        font-size: 0.75rem;
         cursor: pointer;
         transition: all 0.2s;
     }
 
     .view-btn:hover {
-        background: #2f3e9e;
+        background: var(--primary);
         color: white;
     }
 
     .no-results {
         text-align: center;
-        padding: 50px;
-        color: #6c757d;
+        padding: 3rem;
     }
 
     .no-results i {
-        font-size: 48px;
-        margin-bottom: 15px;
-        color: #dee2e6;
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
     }
 
+    /* Pagination */
     .pagination {
         display: flex;
         justify-content: center;
-        gap: 8px;
-        margin-top: 25px;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
         flex-wrap: wrap;
     }
 
     .page-btn {
-        padding: 8px 14px;
-        border: 1px solid #dee2e6;
+        padding: 0.4rem 0.8rem;
+        border: 1px solid var(--border-light);
         border-radius: 8px;
         background: white;
         cursor: pointer;
@@ -378,84 +482,75 @@
     }
 
     .page-btn:hover {
-        background: #f0f2ff;
-        border-color: #2f3e9e;
+        background: #f0f4ff;
+        border-color: var(--primary);
     }
 
     .page-btn.active {
-        background: #2f3e9e;
+        background: var(--primary);
         color: white;
-        border-color: #2f3e9e;
+        border-color: var(--primary);
     }
 
+    /* Responsive */
     @media (max-width: 768px) {
-        .advanced-search-container {
-            padding: 15px;
+        .container-custom {
+            padding: 0 1rem;
         }
 
-        .advanced-search-card, .results-section {
-            padding: 20px;
+        .search-card, .results-section {
+            padding: 1.2rem;
         }
 
         .search-title {
-            font-size: 24px;
+            font-size: 1.4rem;
         }
 
-        .filter-group {
-            flex-direction: column;
-            gap: 15px;
+        .filter-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
         }
 
         .result-header {
             flex-direction: column;
         }
-
-        .result-details {
-            flex-direction: column;
-            gap: 8px;
-        }
     }
 </style>
 
-<div class="container py-5">
-    <div class="advanced-search-container">
-        {{-- نموذج البحث --}}
-        <div class="advanced-search-card">
-            <div class="search-title">
+<div class="advanced-search-page">
+    <div class="container-custom">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-custom">
+            <a href="{{ route('home') }}">الرئيسية</a>
+            <span class="separator">/</span>
+            <span class="current">بحث متقدم</span>
+        </div>
+
+        <!-- Search Card -->
+        <div class="search-card">
+            <h1 class="search-title">
+                <i class="fas fa-sliders-h"></i> بحث متقدم
+            </h1>
+
+            <!-- Search Input -->
+            <div class="search-input-wrapper">
+                <input type="text" id="searchQuery" class="search-input-large" placeholder="اكتب كلمة البحث..." autocomplete="off">
+            </div>
+
+            <!-- Toggle Filters Button -->
+            <button type="button" class="toggle-filters-btn" id="toggleFiltersBtn">
                 <i class="fas fa-sliders-h"></i>
-                بحث متقدم
-            </div>
+                <span id="toggleFiltersText">إخفاء الفلاتر المتقدمة</span>
+                <i class="fas fa-chevron-up" id="toggleFiltersIcon"></i>
+            </button>
 
-            {{-- حقل البحث --}}
-            <div class="form-section">
-                <div class="form-section-title">
-                    <i class="fas fa-search"></i>
-                    <span>ابحث عن</span>
-                </div>
-                <input type="text"
-                       id="searchQuery"
-                       class="search-input-large"
-                       placeholder="اكتب كلمة البحث..."
-                       autocomplete="off">
-            </div>
-
-            {{-- زر طي/إظهار الفلاتر --}}
-            <div style="text-align: center;">
-                <button type="button" class="toggle-filters-btn" id="toggleFiltersBtn">
-                    <i class="fas fa-sliders-h"></i>
-                    <span id="toggleFiltersText">إخفاء الفلاتر المتقدمة</span>
-                    <i class="fas fa-chevron-up" id="toggleFiltersIcon"></i>
-                </button>
-            </div>
-
-            {{-- الفلاتر (قابلة للطي) --}}
+            <!-- Filters Wrapper -->
             <div id="filtersWrapper" class="filters-wrapper">
-                <div class="filter-group">
-                    {{-- فلتر التصنيف --}}
-                    <div class="filter-column">
-                        <div class="form-section-title">
-                            <i class="fas fa-tag"></i>
-                            <span>التصنيف</span>
+                <div class="filter-grid">
+                    <!-- Category Filter -->
+                    <div class="filter-group">
+                        <div class="filter-title">
+                            <i class="fas fa-tag"></i> التصنيف
                         </div>
                         <div class="filter-option">
                             <input type="radio" name="category_id" value="" id="cat_all" checked>
@@ -469,11 +564,10 @@
                         @endforeach
                     </div>
 
-                    {{-- فلتر التقييم --}}
-                    <div class="filter-column">
-                        <div class="form-section-title">
-                            <i class="fas fa-star"></i>
-                            <span>التقييم</span>
+                    <!-- Rating Filter -->
+                    <div class="filter-group">
+                        <div class="filter-title">
+                            <i class="fas fa-star"></i> التقييم
                         </div>
                         <div class="filter-option">
                             <input type="radio" name="rating" value="" id="rating_all" checked>
@@ -485,24 +579,19 @@
                                 <label for="rating_{{ $i }}">
                                     <span class="rating-stars">
                                         @for($j = 1; $j <= 5; $j++)
-                                            @if($j <= $i)
-                                                <i class="fas fa-star"></i>
-                                            @else
-                                                <i class="far fa-star"></i>
-                                            @endif
+                                            <i class="fas fa-star"></i>
                                         @endfor
                                     </span>
-                                    <span class="small">({{ $i }}+ نجوم)</span>
+                                    <span>({{ $i }}+ نجوم)</span>
                                 </label>
                             </div>
                         @endfor
                     </div>
 
-                    {{-- نوع النتائج --}}
-                    <div class="filter-column">
-                        <div class="form-section-title">
-                            <i class="fas fa-filter"></i>
-                            <span>نوع النتائج</span>
+                    <!-- Type Filter -->
+                    <div class="filter-group">
+                        <div class="filter-title">
+                            <i class="fas fa-filter"></i> نوع النتائج
                         </div>
                         <div class="filter-option">
                             <input type="radio" name="type" value="all" id="type_all" checked>
@@ -518,11 +607,10 @@
                         </div>
                     </div>
 
-                    {{-- ترتيب حسب --}}
-                    <div class="filter-column">
-                        <div class="form-section-title">
-                            <i class="fas fa-sort-amount-down"></i>
-                            <span>ترتيب حسب</span>
+                    <!-- Sort Filter -->
+                    <div class="filter-group">
+                        <div class="filter-title">
+                            <i class="fas fa-sort-amount-down"></i> ترتيب حسب
                         </div>
                         <div class="filter-option">
                             <input type="radio" name="sort" value="relevance" id="sort_relevance" checked>
@@ -544,23 +632,19 @@
                 </div>
             </div>
 
-            {{-- زر البحث --}}
-            <div class="form-section" style="margin-top: 20px;">
-                <button type="button" class="search-btn-advanced" id="searchButton">
-                    <i class="fas fa-search"></i>
-                    بحث
-                </button>
-            </div>
+            <!-- Search Button -->
+            <button type="button" class="search-btn" id="searchButton">
+                <i class="fas fa-search"></i> بحث
+            </button>
 
             <div class="reset-link">
                 <a id="resetFilters">
-                    <i class="fas fa-undo-alt me-1"></i>
-                    إعادة تعيين جميع الفلاتر
+                    <i class="fas fa-undo-alt"></i> إعادة تعيين جميع الفلاتر
                 </a>
             </div>
         </div>
 
-        {{-- نتائج البحث --}}
+        <!-- Results Section -->
         <div class="results-section" id="resultsSection" style="display: none;">
             <div class="results-header">
                 <div class="results-count">
@@ -571,11 +655,11 @@
             </div>
 
             <div class="loading-spinner" id="loadingSpinner">
-                <i class="fas fa-spinner"></i>
+                <i class="fas fa-spinner fa-spin"></i>
                 <p>جاري البحث...</p>
             </div>
 
-            <div id="resultsContainer"></div>
+            <div id="resultsContainer" class="results-container"></div>
 
             <div id="paginationContainer" class="pagination"></div>
         </div>
@@ -584,10 +668,8 @@
 
 <script>
     let currentPage = 1;
-    let isSearching = false;
     let filtersCollapsed = false;
 
-    // التحكم في طي/إظهار الفلاتر
     const filtersWrapper = document.getElementById('filtersWrapper');
     const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
     const toggleFiltersText = document.getElementById('toggleFiltersText');
@@ -595,13 +677,11 @@
 
     function toggleFilters() {
         if (filtersCollapsed) {
-            // إظهار الفلاتر
             filtersWrapper.classList.remove('collapsed');
             toggleFiltersText.textContent = 'إخفاء الفلاتر المتقدمة';
             toggleFiltersIcon.className = 'fas fa-chevron-up';
             filtersCollapsed = false;
         } else {
-            // إخفاء الفلاتر
             filtersWrapper.classList.add('collapsed');
             toggleFiltersText.textContent = 'تغيير إعدادات البحث المتقدم';
             toggleFiltersIcon.className = 'fas fa-chevron-down';
@@ -613,7 +693,6 @@
         toggleFiltersBtn.addEventListener('click', toggleFilters);
     }
 
-    // الحصول على الفلاتر الحالية
     function getFilters() {
         return {
             query: document.getElementById('searchQuery').value,
@@ -625,22 +704,18 @@
         };
     }
 
-    // تنفيذ البحث
     async function performSearch() {
         const filters = getFilters();
 
-        // إذا كان حقل البحث فارغاً، لا نبحث
         if (!filters.query.trim()) {
             alert('الرجاء إدخال كلمة البحث');
             return;
         }
 
-        isSearching = true;
         document.getElementById('loadingSpinner').style.display = 'block';
         document.getElementById('resultsContainer').innerHTML = '';
         document.getElementById('resultsSection').style.display = 'block';
 
-        // بعد الضغط على بحث، نخفي الفلاتر تلقائياً (إذا كانت ظاهرة)
         if (!filtersCollapsed) {
             toggleFilters();
         }
@@ -658,14 +733,13 @@
                     <div class="no-results">
                         <i class="fas fa-search"></i>
                         <p>لا توجد نتائج مطابقة لبحثك</p>
-                        <small>جرّب كلمات بحث أخرى أو غير الفلاتر</small>
+                        <small class="text-muted">جرّب كلمات بحث أخرى أو غير الفلاتر</small>
                     </div>
                 `;
                 document.getElementById('paginationContainer').innerHTML = '';
                 return;
             }
 
-            // عرض النتائج
             let resultsHtml = '';
             data.results.forEach(result => {
                 const isGovernment = result.type === 'government';
@@ -689,7 +763,7 @@
                         </div>
 
                         <div class="result-details">
-                            ${result.address ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(result.address)}</span>` : ''}
+                            ${result.address ? `<span><i class="fas fa-location-dot"></i> ${escapeHtml(result.address)}</span>` : ''}
                             ${result.work_hours ? `<span><i class="fas fa-clock"></i> ${escapeHtml(result.work_hours)}</span>` : ''}
                             ${result.governments_count ? `<span><i class="fas fa-building"></i> ${result.governments_count} جهة تقدم الخدمة</span>` : ''}
                         </div>
@@ -710,7 +784,6 @@
 
             document.getElementById('resultsContainer').innerHTML = resultsHtml;
 
-            // عرض الترقيم
             if (data.last_page > 1) {
                 let paginationHtml = '';
                 for (let i = 1; i <= data.last_page; i++) {
@@ -725,7 +798,6 @@
                 document.getElementById('paginationContainer').innerHTML = '';
             }
 
-            // تمرير الصفحة إلى النتائج
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         } catch (error) {
@@ -735,12 +807,10 @@
                 <div class="no-results">
                     <i class="fas fa-exclamation-triangle"></i>
                     <p>حدث خطأ أثناء البحث</p>
-                    <small>يرجى المحاولة مرة أخرى</small>
+                    <small class="text-muted">يرجى المحاولة مرة أخرى</small>
                 </div>
             `;
         }
-
-        isSearching = false;
     }
 
     function escapeHtml(str) {
@@ -766,7 +836,6 @@
         performSearch();
     }
 
-    // إعادة تعيين الفلاتر
     function resetFilters() {
         document.getElementById('searchQuery').value = '';
         document.querySelector('input[name="category_id"][value=""]').checked = true;
@@ -776,13 +845,11 @@
         currentPage = 1;
         document.getElementById('resultsSection').style.display = 'none';
 
-        // إذا كانت الفلاتر مطوية، نظهرها
         if (filtersCollapsed) {
             toggleFilters();
         }
     }
 
-    // ربط الأحداث
     document.getElementById('searchButton').addEventListener('click', () => {
         currentPage = 1;
         performSearch();
@@ -796,8 +863,5 @@
     });
 
     document.getElementById('resetFilters').addEventListener('click', resetFilters);
-
-    // ملاحظة: تم إزالة حدث change من الفلاتر
-    // الفلاتر الآن لا تقوم بالبحث تلقائياً، فقط عند الضغط على زر بحث
 </script>
 @endsection

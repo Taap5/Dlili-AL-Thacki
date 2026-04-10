@@ -776,10 +776,15 @@
 
 @push('scripts')
     <style>
+/* خلفية بسيطة متناسقة بدون كرات متحركة */
+body {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+    min-height: 100vh;
+}
         :root {
-            --primary: #2f3e9e;
-            --primary-light: #5a6fc9;
-            --primary-dark: #1e2a6e;
+            --primary: #1b2463;
+            --primary-light: #414970;
+            --primary-dark: #161b41;
             --secondary: #ffc107;
             --bg-light: #fef9f0;
             --bg-gray: #f8f9fa;
@@ -811,7 +816,7 @@
             top: 0;
             bottom: 0;
             width: 5px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #171e3a 100%);
             border-radius: 4px;
         }
 
@@ -1652,7 +1657,7 @@
         }
 
         /* إزالة transform من جميع العناصر */
-        
+
 
         /* استثناء فقط للعناصر التي تحتاج transform (مثل الأكورديون) */
         .accordion-btn:not(.collapsed) .accordion-arrow {

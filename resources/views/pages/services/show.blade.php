@@ -1,733 +1,882 @@
 @extends('layouts.app')
 
-@section('title', $service->name)
+@section('title', $service->name . ' - دليلي الذكي')
 
 @section('content')
-    @php
+@php
+    // حساب إحصائيات الخدمة
+    $minPrice = null;
+    $minProcessingTime = null;
+    $totalRating = 0;
+    $ratingCount = 0;
 
-        // حساب إحصائيات الخدمة
-        $minPrice = null;
-        $minProcessingTime = null;
-        $totalRating = 0;
-        $ratingCount = 0;
-
-        foreach ($service->governments as $gov) {
-            // أقل سعر
-            if ($gov->pivot->price) {
-                $price = (float) preg_replace('/[^0-9]/', '', $gov->pivot->price);
-                if ($minPrice === null || $price < $minPrice) {
-                    $minPrice = $price;
-                }
-            }
-
-            // أقل مدة إنجاز (يمكن تحسين هذا المنطق)
-            if ($gov->pivot->processing_time && !$minProcessingTime) {
-                $minProcessingTime = $gov->pivot->processing_time;
-            }
-
-            // متوسط التقييم
-            $avgRating = $gov->reviews->avg('rating');
-            if ($avgRating) {
-                $totalRating += $avgRating;
-                $ratingCount++;
+    foreach ($service->governments as $gov) {
+        if ($gov->pivot->price) {
+            $price = (float) preg_replace('/[^0-9]/', '', $gov->pivot->price);
+            if ($minPrice === null || $price < $minPrice) {
+                $minPrice = $price;
             }
         }
-        $avgServiceRating = $ratingCount > 0 ? round($totalRating / $ratingCount, 1) : null;
-        $isFavorited = Auth::check() ? Auth::user()->isServiceFavorite($service->id) : false;
-        $images = $service->images ?? [];
-    @endphp
+        if ($gov->pivot->processing_time && !$minProcessingTime) {
+            $minProcessingTime = $gov->pivot->processing_time;
+        }
+        $avgRating = $gov->reviews->avg('rating');
+        if ($avgRating) {
+            $totalRating += $avgRating;
+            $ratingCount++;
+        }
+    }
+    $avgServiceRating = $ratingCount > 0 ? round($totalRating / $ratingCount, 1) : null;
+    $isFavorited = Auth::check() ? Auth::user()->isServiceFavorite($service->id) : false;
+    $images = $service->images ?? [];
+@endphp
 
-    <style>
-        /* تنسيقات إضافية */
-        .government-service-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+<style>
+    :root {
+        --primary: #2f3e9e;
+        --primary-light: #5a6fc9;
+        --primary-dark: #1a2366;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --border-light: rgba(47, 62, 158, 0.1);
+        --card-shadow: 0 20px 35px -12px rgba(47, 62, 158, 0.15);
+    }
+
+    .service-detail-page {
+        background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .service-detail-page::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(47, 62, 158, 0.05) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: floatBg 25s infinite ease-in-out;
+    }
+
+    .service-detail-page::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -50px;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(90, 111, 201, 0.04) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: floatBg 20s infinite ease-in-out reverse;
+    }
+
+    @keyframes floatBg {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -30px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    .container-custom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-custom {
+        margin-bottom: 1.5rem;
+    }
+
+    .breadcrumb-custom a {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+
+    .breadcrumb-custom a:hover {
+        text-decoration: underline;
+    }
+
+    .breadcrumb-custom .separator {
+        color: var(--text-muted);
+        margin: 0 0.5rem;
+    }
+
+    .breadcrumb-custom .current {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    /* Hero Card */
+    .hero-card {
+        background: white;
+        border-radius: 28px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-light);
+        box-shadow: var(--card-shadow);
+    }
+
+    .service-icon-large {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #f0f4ff, #e8eaf6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .service-icon-large i {
+        font-size: 3rem;
+        color: var(--primary);
+    }
+
+    .service-name {
+        font-size: 1.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--text-dark), var(--primary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        margin-bottom: 0.5rem;
+    }
+
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f0f4ff;
+        padding: 0.3rem 1rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        color: var(--primary);
+    }
+
+    .service-description {
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-top: 1rem;
+    }
+
+    .read-more-btn {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .favorite-action {
+        width: 100%;
+        padding: 0.75rem;
+        background: white;
+        border: 2px solid var(--border-light);
+        border-radius: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .favorite-action:hover {
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+
+    .favorite-action.active {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border-color: #ef4444;
+        color: white;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .stat-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        background: #f1f5f9;
+    }
+
+    .stat-card i {
+        font-size: 1.5rem;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-number {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    /* Gallery */
+    .gallery-wrapper {
+        background: white;
+        border-radius: 20px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-light);
+    }
+
+    .gallery-scroll {
+        display: flex;
+        gap: 0.75rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .gallery-item {
+        width: 100px;
+        height: 80px;
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .gallery-item:hover img {
+        transform: scale(1.05);
+    }
+
+    /* Section Header */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        position: relative;
+        padding-right: 1rem;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 24px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 4px;
+    }
+
+    .section-badge {
+        background: #f0f4ff;
+        padding: 0.3rem 1rem;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        color: var(--primary);
+    }
+
+    /* Government Cards */
+    .governments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .government-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+
+    .government-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow);
+        border-color: var(--primary);
+    }
+
+    .card-img {
+        height: 140px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .card-img-placeholder {
+        height: 140px;
+        background: linear-gradient(135deg, #f0f4ff, #e8eaf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card-img-placeholder i {
+        font-size: 3rem;
+        color: var(--primary-light);
+    }
+
+    .card-body {
+        padding: 1.2rem;
+    }
+
+    .government-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .government-name a {
+        color: var(--text-dark);
+        text-decoration: none;
+    }
+
+    .government-name a:hover {
+        color: var(--primary);
+    }
+
+    .quick-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .quick-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 30px;
+        background: #f1f5f9;
+        color: var(--text-muted);
+    }
+
+    .quick-badge.price {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .quick-badge.time {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .toggle-details-btn {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+
+    .service-details {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .detail-row {
+        margin-bottom: 0.75rem;
+    }
+
+    .detail-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.2rem;
+    }
+
+    .detail-value {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    .gov-footer {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .gov-contact {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+    }
+
+    /* Related Services */
+    .related-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .related-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s;
+        border: 1px solid var(--border-light);
+        text-decoration: none;
+    }
+
+    .related-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: var(--card-shadow);
+    }
+
+    .related-icon {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 0.5rem;
+        background: #f0f4ff;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .related-icon i {
+        font-size: 1.5rem;
+        color: var(--primary);
+    }
+
+    .related-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container-custom {
+            padding: 0 1rem;
         }
 
-        .government-service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+        .service-name {
+            font-size: 1.4rem;
         }
 
-        .service-detail-badge {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 12px;
+        .governments-grid {
+            grid-template-columns: 1fr;
         }
 
-        .service-detail-label {
-            font-size: 11px;
-            color: #6c757d;
-            margin-bottom: 4px;
-            display: block;
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
 
-        .service-detail-value {
-            font-size: 14px;
-            font-weight: 500;
-            color: #2f3e9e;
+        .related-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
+    }
+</style>
 
-        .pivot-description {
-            background: #f0f4ff;
-            border-radius: 12px;
-            padding: 12px;
-            margin: 12px 0;
-            font-size: 13px;
-            line-height: 1.5;
-            color: #1e2a6e;
-        }
+<div class="service-detail-page">
+    <div class="container-custom">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-custom">
+            <a href="{{ route('home') }}">الرئيسية</a>
+            <span class="separator">/</span>
+            <a href="{{ route('services.index') }}">الخدمات</a>
+            <span class="separator">/</span>
+            <span class="current">{{ $service->name }}</span>
+        </div>
 
-        .price-badge {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #dee2e6, transparent);
-            margin: 12px 0;
-        }
-
-        .service-icon-circle {
-            width: 100px;
-            height: 100px;
-            background: #f0f4ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        /* تنسيق الوصف المختصر */
-        .short-description {
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .short-description:hover {
-            background: rgba(47, 62, 158, 0.05);
-            border-radius: 12px;
-        }
-
-        .read-more-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: #2f3e9e;
-            font-size: 12px;
-            font-weight: 500;
-            margin-top: 8px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-        }
-
-        .read-more-btn:hover {
-            color: #5a6fc9;
-            text-decoration: underline;
-        }
-
-        /* مودال عرض الوصف الكامل */
-        .description-modal .modal-content {
-            border-radius: 24px;
-            overflow: hidden;
-        }
-
-        .description-modal .modal-body {
-            padding: 24px;
-            max-height: 70vh;
-            overflow-y: auto;
-            line-height: 1.8;
-            color: #4a5568;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .description-modal .modal-header {
-            background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
-            color: white;
-            padding: 16px 24px;
-            border: none;
-        }
-
-        .description-modal .modal-header .modal-title {
-            color: white;
-            font-weight: 600;
-        }
-
-        .description-modal .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-            opacity: 0.8;
-        }
-
-        .description-modal .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid #e9ecef;
-        }
-
-        @media (max-width: 768px) {
-            .description-modal .modal-body {
-                padding: 16px;
-                font-size: 14px;
-            }
-        }
-    </style>
-
-    <div class="container py-4">
-        <!-- بطاقة الخدمة الرئيسية -->
-        <div class="card shadow-sm border-0 rounded-4 mb-5 overflow-hidden service-main-card">
-            <div class="card-body p-4 p-md-5">
-                <!-- أيقونة الخدمة -->
-                <div class="service-icon-circle mx-auto mx-md-0">
-                    @if ($service->icon_image)
-                        <img src="{{ asset('storage/' . $service->icon_image) }}" alt="{{ $service->name }}"
-                            style="width: 80px; height: 80px; object-fit: contain;">
-                    @else
-                        <i class="fas fa-ambulance fa-3x text-primary"></i>
-                    @endif
-                </div>
-
-                <!-- اسم الخدمة مع شريط جانبي وزر المفضلة -->
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                    <div class="service-name-wrapper">
-                        <h1 class="fw-bold mb-3 service-name">{{ $service->name }}</h1>
-                        @if ($service->category)
-                            <span class="badge bg-primary rounded-pill px-3 py-2">
-                                <i class="fas fa-tag me-1"></i> {{ $service->category->name }}
-                            </span>
+        <!-- Hero Card -->
+        <div class="hero-card">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="service-icon-large">
+                        @if($service->icon_image)
+                            <img src="{{ asset('storage/' . $service->icon_image) }}" alt="{{ $service->name }}" style="width: 70px; height: 70px; object-fit: contain;">
+                        @else
+                            <i class="fas fa-concierge-bell"></i>
                         @endif
                     </div>
+                    <h1 class="service-name">{{ $service->name }}</h1>
+                    @if($service->category)
+                        <div class="category-badge">
+                            <i class="fas fa-tag"></i>
+                            <span>{{ $service->category->name }}</span>
+                        </div>
+                    @endif
 
-                    @auth
-                        <button class="btn {{ $isFavorited ? 'btn-danger' : 'btn-outline-danger' }} favorite-btn"
-                            data-id="{{ $service->id }}" data-type="service" data-url="{{ route('favorite.service.toggle') }}">
-                            <i class="fas {{ $isFavorited ? 'fa-heart' : 'fa-heart-broken' }} me-1"></i>
-                            <span>{{ $isFavorited ? 'تمت الإضافة' : 'أضف إلى المفضلة' }}</span>
-                        </button>
-                    @endauth
-                </div>
-
-                <!-- وصف الخدمة العام -->
-                @if ($service->description)
-                    @php
-                        $fullDescription = $service->description;
-                        $shortDescription = Str::limit($fullDescription, 150, '...');
-                        $isLong = Str::length($fullDescription) > 150;
-                    @endphp
-                    <div class="service-description mb-4 mt-3">
-                        <div class="short-description" id="shortDesc">
-                            <p class="text-muted" style="white-space: pre-wrap;">{{ $shortDescription }}</p>
-                            @if ($isLong)
-                                <button class="read-more-btn" onclick="openFullDescription()">
-                                    <i class="fas fa-chevron-down"></i> عرض المزيد
+                    @if($service->description)
+                        <div class="service-description">
+                            <p>{{ Str::limit($service->description, 200) }}</p>
+                            @if(Str::length($service->description) > 200)
+                                <button class="read-more-btn" onclick="openFullDescriptionModal()">
+                                    <span>قراءة المزيد</span>
+                                    <i class="fas fa-arrow-left"></i>
                                 </button>
                             @endif
                         </div>
-                    </div>
-
-                    <!-- مودال عرض الوصف الكامل -->
-                    <div class="modal fade description-modal" id="fullDescriptionModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="fas fa-align-right me-2"></i>
-                                        وصف {{ $service->name }}
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p style="white-space: pre-wrap; line-height: 1.8;">{{ $fullDescription }}</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-                <!-- معرض الصور -->
-                @if (count($images) > 0)
-                    <div class="mb-4 images-strip-container">
-                        <div class="d-flex gap-2 overflow-auto py-2 images-strip">
-                            @foreach ($images as $img)
-                                <img src="{{ asset('storage/' . $img) }}" class="rounded-3 shadow-sm service-thumb"
-                                    style="width: 100px; height: 75px; object-fit: cover; cursor: pointer;"
-                                    data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
-                                    data-full-img="{{ asset('storage/' . $img) }}" alt="صورة الخدمة">
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <!-- إحصائيات سريعة -->
-                <!-- إحصائيات سريعة محسنة -->
-                <div class="row g-3 mt-3">
-                    <div class="col-6 col-md-3">
-                        <div class="stat-card text-center">
-                            <i class="fas fa-building fa-lg mb-2 text-primary"></i>
-                            <h5 class="mb-0 fw-bold">{{ $service->governments->count() }}</h5>
-                            <small class="text-muted">جهة تقدم الخدمة</small>
-                        </div>
-                    </div>
-
-                    @if ($minPrice)
-                        <div class="col-6 col-md-3">
-                            <div class="stat-card text-center">
-                                <i class="fas fa-tag fa-lg mb-2 text-success"></i>
-                                <h5 class="mb-0 fw-bold">{{ number_format($minPrice) }} ريال</h5>
-                                <small class="text-muted">أقل سعر</small>
-                            </div>
-                        </div>
                     @endif
 
-                    @if ($minProcessingTime)
-                        <div class="col-6 col-md-3">
-                            <div class="stat-card text-center">
-                                <i class="fas fa-hourglass-half fa-lg mb-2 text-info"></i>
-                                <h5 class="mb-0 fw-bold">{{ $minProcessingTime }}</h5>
-                                <small class="text-muted">أقل مدة إنجاز</small>
-                            </div>
+                    <!-- Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-building"></i>
+                            <div class="stat-number">{{ $service->governments->count() }}</div>
+                            <div class="stat-label">جهة تقدم الخدمة</div>
                         </div>
-                    @endif
-
-                    @if ($avgServiceRating)
-                        <div class="col-6 col-md-3">
-                            <div class="stat-card text-center">
-                                <i class="fas fa-star fa-lg mb-2 text-warning"></i>
-                                <h5 class="mb-0 fw-bold">{{ $avgServiceRating }}</h5>
-                                <small class="text-muted">متوسط التقييم</small>
-                            </div>
+                        @if($minPrice)
+                        <div class="stat-card">
+                            <i class="fas fa-tag"></i>
+                            <div class="stat-number">{{ number_format($minPrice) }}</div>
+                            <div class="stat-label">ريال (أقل سعر)</div>
                         </div>
-                    @endif
+                        @endif
+                        @if($avgServiceRating)
+                        <div class="stat-card">
+                            <i class="fas fa-star"></i>
+                            <div class="stat-number">{{ $avgServiceRating }}</div>
+                            <div class="stat-label">متوسط التقييم</div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                <div class="col-md-4 mt-4 mt-md-0">
+                    @auth
+                        <button class="favorite-action {{ $isFavorited ? 'active' : '' }}" id="favoriteBtn">
+                            <i class="fas fa-heart"></i>
+                            <span>{{ $isFavorited ? 'تمت الإضافة' : 'أضف للمفضلة' }}</span>
+                        </button>
+                    @endauth
                 </div>
             </div>
         </div>
 
-        <!-- عنوان قسم الجهات -->
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div>
-                <h3 class="fw-bold mb-1">
-                    <i class="fas fa-building text-primary me-2"></i>
-                    الجهات التي تقدم هذه الخدمة
-                </h3>
-                <p class="text-muted small">اختر الجهة المناسبة لتحصل على الخدمة - تفاصيل الخدمة تختلف حسب الجهة</p>
+        <!-- Gallery -->
+        @if(count($images) > 0)
+            <div class="gallery-wrapper">
+                <div class="gallery-scroll">
+                    @foreach($images as $index => $img)
+                        <div class="gallery-item" onclick="openGallery({{ $index }})">
+                            <img src="{{ asset('storage/' . $img) }}" alt="صورة الخدمة">
+                            <div class="gallery-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;">
+                                <i class="fas fa-search-plus" style="color: white;"></i>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
-            <span class="badge bg-primary rounded-pill px-3 py-2">{{ $service->governments->count() }} جهة</span>
+        @endif
+
+        <!-- Governments Section -->
+        <div class="section-header">
+            <h2 class="section-title">الجهات التي تقدم هذه الخدمة</h2>
+            <span class="section-badge">{{ $service->governments->count() }} جهة</span>
         </div>
 
-        <!-- قائمة الجهات - بطاقات منفردة مع تفاصيل الخدمة لكل جهة -->
-        @if ($service->governments->count() > 0)
-            <div class="row g-4">
-                @foreach ($service->governments as $government)
+        @if($service->governments->count() > 0)
+            <div class="governments-grid">
+                @foreach($service->governments as $government)
                     @php
                         $pivot = $government->pivot;
-                        $uniqueId = 'gov_service_' . $government->id . '_' . $service->id;
+                        $uniqueId = 'gov_' . $government->id;
+                        $govImages = $government->images ?? [];
+                        $firstImage = is_array($govImages) && count($govImages) > 0 ? $govImages[0] : null;
                     @endphp
-                    <div class="col-12 col-md-6 col-lg-4">
-                        <div class="card government-service-card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                            <!-- صورة الجهة (إذا وجدت) -->
-                            <div class="government-card-img position-relative">
-                                @php
-                                    $govImages = $government->images ?? [];
-                                    $firstImage = is_array($govImages) && count($govImages) > 0 ? $govImages[0] : null;
-                                @endphp
-                                @if ($firstImage)
-                                    <img src="{{ asset('storage/' . $firstImage) }}" class="card-img-top"
-                                        alt="{{ $government->name }}" style="height: 160px; object-fit: cover;">
-                                @else
-                                    <div class="bg-light d-flex align-items-center justify-content-center"
-                                        style="height: 160px;">
-                                        <i class="fas fa-building fa-4x text-muted"></i>
-                                    </div>
+                    <div class="government-card">
+                        @if($firstImage)
+                            <img src="{{ asset('storage/' . $firstImage) }}" class="card-img" alt="{{ $government->name }}">
+                        @else
+                            <div class="card-img-placeholder">
+                                <i class="fas fa-building"></i>
+                            </div>
+                        @endif
+
+                        <div class="card-body">
+                            <h3 class="government-name">
+                                <a href="{{ route('governments.show', $government->id) }}">{{ $government->name }}</a>
+                            </h3>
+
+                            <div class="quick-badges">
+                                @if($pivot->price)
+                                    <span class="quick-badge price"><i class="fas fa-tag"></i> {{ $pivot->price }}</span>
                                 @endif
-                                <div class="position-absolute top-0 end-0 m-3">
-                                    <span class="badge bg-white text-primary rounded-pill shadow-sm px-3 py-2">
-                                        <i class="fas fa-star text-warning me-1"></i>
-                                        {{ number_format($government->reviews->avg('rating') ?? 0, 1) }}
-                                    </span>
-                                </div>
+                                @if($pivot->processing_time)
+                                    <span class="quick-badge time"><i class="fas fa-hourglass-half"></i> {{ $pivot->processing_time }}</span>
+                                @endif
                             </div>
 
-                            <div class="card-body p-4">
-                                <!-- رأس البطاقة مع زر طي/فتح -->
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h4 class="card-title fw-bold mb-0">
-                                        <a href="{{ route('governments.show', $government->id) }}"
-                                            class="text-decoration-none text-dark">
-                                            {{ $government->name }}
-                                        </a>
-                                    </h4>
-                                    <button type="button"
-                                        class="btn btn-sm btn-outline-primary rounded-pill toggle-details-btn"
-                                        onclick="toggleGovernmentDetails('{{ $uniqueId }}')"
-                                        style="font-size: 11px; padding: 4px 10px;">
-                                        <i class="fas fa-chevron-down" id="icon_{{ $uniqueId }}"></i>
-                                        <span id="text_{{ $uniqueId }}">عرض التفاصيل</span>
-                                    </button>
-                                </div>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill w-100 toggle-details-btn" onclick="toggleDetails('{{ $uniqueId }}')">
+                                <i class="fas fa-chevron-down" id="icon_{{ $uniqueId }}"></i>
+                                <span id="text_{{ $uniqueId }}">عرض التفاصيل</span>
+                            </button>
 
-                                <!-- معلومات سريعة (تظهر دائماً) -->
-<!-- معلومات سريعة (تظهر دائماً) -->
-<div class="quick-info mb-2">
-    @php
-        $userLat = Auth::check() ? Auth::user()->location_lat ?? null : null;
-        $userLng = Auth::check() ? Auth::user()->location_long ?? null : null;
-        $distance = null;
-
-        // حساب المسافة إذا توفر موقع المستخدم وموقع الجهة
-        if ($userLat && $userLng && $government->location_lat && $government->location_long) {
-            // دالة حساب المسافة (يمكنك إضافتها في helper أو هنا)
-            $earthRadius = 6371; // km
-            $latDelta = deg2rad($government->location_lat - $userLat);
-            $lonDelta = deg2rad($government->location_long - $userLng);
-            $a = sin($latDelta / 2) * sin($latDelta / 2) +
-                 cos(deg2rad($userLat)) * cos(deg2rad($government->location_lat)) *
-                 sin($lonDelta / 2) * sin($lonDelta / 2);
-            $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-            $distance = round($earthRadius * $c, 1);
-        }
-    @endphp
-
-    @if ($pivot->price)
-        <span class="badge bg-success me-1">{{ $pivot->price }}</span>
-    @endif
-
-    @if ($pivot->processing_time)
-        <span class="badge bg-info me-1">
-            <i class="fas fa-hourglass-half"></i> {{ $pivot->processing_time }}
-        </span>
-    @endif
-
-    @if ($distance)
-        <span class="badge bg-secondary me-1">
-            <i class="fas fa-location-dot"></i> {{ $distance }} كم
-        </span>
-    @endif
-</div>
-                                <!-- التفاصيل الكاملة (تظهر عند الضغط) -->
-                                <div class="service-full-details" id="details_{{ $uniqueId }}"
-                                    style="display: none;">
-                                    @if ($pivot->description)
-                                        <div class="pivot-description mb-2">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            {{ $pivot->description }}
-                                        </div>
-                                    @endif
-
-                                    <div class="service-detail-badge">
-                                        <div class="row g-2">
-                                            {{-- مدة الإنجاز --}}
-                                            @if ($pivot->processing_time)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-hourglass-half me-1"></i> ⏱️ مدة الإنجاز
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        {{ $pivot->processing_time }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- موقع التقديم --}}
-                                            @if ($pivot->office_location)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-door-open me-1"></i> 📍 موقع التقديم
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        {{ $pivot->office_location }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- الأوراق المطلوبة --}}
-                                            @if ($pivot->required_documents)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-file-alt me-1"></i> 📄 الأوراق المطلوبة
-                                                    </span>
-                                                    <div class="service-detail-value"
-                                                        style="white-space: pre-line; font-size: 12px;">
-                                                        {{ $pivot->required_documents }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- الإجراءات خطوة بخطوة --}}
-                                            @if ($pivot->steps)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-list-ol me-1"></i> 📋 الإجراءات
-                                                    </span>
-                                                    <div class="service-detail-value"
-                                                        style="white-space: pre-line; font-size: 12px;">
-                                                        {{ $pivot->steps }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- الشروط --}}
-                                            @if ($pivot->conditions)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-clipboard-list me-1"></i> 📜 الشروط
-                                                    </span>
-                                                    <div class="service-detail-value"
-                                                        style="white-space: pre-line; font-size: 12px;">
-                                                        {{ $pivot->conditions }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- ملاحظات إضافية --}}
-                                            @if ($pivot->notes)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-pen-alt me-1"></i> 📝 ملاحظات
-                                                    </span>
-                                                    <div class="service-detail-value"
-                                                        style="white-space: pre-line; font-size: 12px;">
-                                                        {{ $pivot->notes }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- رقم الاتصال الخاص --}}
-                                            @if ($pivot->contact_number)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-phone-alt me-1"></i> 📞 رقم الاتصال الخاص
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        <a href="tel:{{ $pivot->contact_number }}"
-                                                            class="text-decoration-none">
-                                                            {{ $pivot->contact_number }}
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- ساعات العمل --}}
-                                            @if ($pivot->work_hours)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-clock me-1"></i> 🕐 ساعات العمل
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        {{ $pivot->work_hours }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- السعر --}}
-                                            @if ($pivot->price)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-coins me-1"></i> 💰 الرسوم
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        <span class="price-badge">
-                                                            {{ $pivot->price }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- يتطلب حجز مسبق --}}
-                                            @if ($pivot->requires_appointment)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-calendar-check me-1"></i> 📅 يتطلب حجز مسبق
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        نعم
-                                                        @if ($pivot->appointment_phone)
-                                                            - <a
-                                                                href="tel:{{ $pivot->appointment_phone }}">{{ $pivot->appointment_phone }}</a>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            {{-- حقول خاصة بالمستشفيات --}}
-                                            @if ($pivot->doctor_specialist)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-user-md me-1"></i> 👨‍⚕️ الطبيب المختص
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        {{ $pivot->doctor_specialist }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            @if ($pivot->hospital_stay_duration)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-procedures me-1"></i> 🏥 مدة التنويم
-                                                    </span>
-                                                    <div class="service-detail-value">
-                                                        {{ $pivot->hospital_stay_duration }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            @if ($pivot->emergency_notes)
-                                                <div class="col-12">
-                                                    <span class="service-detail-label">
-                                                        <i class="fas fa-ambulance me-1"></i> 🚨 ملاحظات للطوارئ
-                                                    </span>
-                                                    <div class="service-detail-value"
-                                                        style="white-space: pre-line; font-size: 12px;">
-                                                        {{ $pivot->emergency_notes }}
-                                                    </div>
-                                                </div>
-                                            @endif
+                            <div class="service-details" id="details_{{ $uniqueId }}" style="display: none;">
+                                @if($pivot->description)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📄 وصف الخدمة لهذه الجهة</div>
+                                        <div class="detail-value">{{ $pivot->description }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->office_location)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📍 موقع التقديم</div>
+                                        <div class="detail-value">{{ $pivot->office_location }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->required_documents)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📄 الأوراق المطلوبة</div>
+                                        <div class="detail-value" style="white-space: pre-line;">{{ $pivot->required_documents }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->steps)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📋 الإجراءات خطوة بخطوة</div>
+                                        <div class="detail-value" style="white-space: pre-line;">{{ $pivot->steps }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->conditions)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📜 الشروط</div>
+                                        <div class="detail-value" style="white-space: pre-line;">{{ $pivot->conditions }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->notes)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📝 ملاحظات إضافية</div>
+                                        <div class="detail-value" style="white-space: pre-line;">{{ $pivot->notes }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->contact_number)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📞 رقم الاتصال الخاص</div>
+                                        <div class="detail-value"><a href="tel:{{ $pivot->contact_number }}">{{ $pivot->contact_number }}</a></div>
+                                    </div>
+                                @endif
+                                @if($pivot->work_hours)
+                                    <div class="detail-row">
+                                        <div class="detail-label">🕐 ساعات العمل</div>
+                                        <div class="detail-value">{{ $pivot->work_hours }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->requires_appointment)
+                                    <div class="detail-row">
+                                        <div class="detail-label">📅 يتطلب حجز مسبق</div>
+                                        <div class="detail-value">
+                                            نعم @if($pivot->appointment_phone) - <a href="tel:{{ $pivot->appointment_phone }}">{{ $pivot->appointment_phone }}</a> @endif
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- معلومات الاتصال العامة للجهة (تظهر دائماً) -->
-                                <div class="government-contact mt-3 pt-2">
-                                    <div class="divider"></div>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <small class="text-muted">
-                                            <i class="fas fa-phone-alt me-1"></i> هاتف الجهة:
-                                        </small>
-                                        <small class="fw-bold">
-                                            {{ $government->contact_number ?? 'غير متوفر' }}
-                                        </small>
+                                @endif
+                                @if($pivot->doctor_specialist)
+                                    <div class="detail-row">
+                                        <div class="detail-label">👨‍⚕️ الطبيب المختص</div>
+                                        <div class="detail-value">{{ $pivot->doctor_specialist }}</div>
                                     </div>
-                                    @if ($government->address)
-                                        <div class="d-flex align-items-center justify-content-between mt-1">
-                                            <small class="text-muted">
-                                                <i class="fas fa-map-marker-alt me-1"></i> العنوان:
-                                            </small>
-                                            <small class="fw-bold text-truncate" style="max-width: 150px;">
-                                                {{ Str::limit($government->address, 30) }}
-                                            </small>
-                                        </div>
+                                @endif
+                                @if($pivot->hospital_stay_duration)
+                                    <div class="detail-row">
+                                        <div class="detail-label">🏥 مدة التنويم المتوقعة</div>
+                                        <div class="detail-value">{{ $pivot->hospital_stay_duration }}</div>
+                                    </div>
+                                @endif
+                                @if($pivot->emergency_notes)
+                                    <div class="detail-row">
+                                        <div class="detail-label">🚨 ملاحظات للطوارئ</div>
+                                        <div class="detail-value" style="white-space: pre-line;">{{ $pivot->emergency_notes }}</div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="gov-footer">
+                                <div class="gov-contact">
+                                    <span><i class="fas fa-phone-alt"></i> {{ $government->contact_number ?? 'غير متوفر' }}</span>
+                                    @if($government->address)
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ Str::limit($government->address, 25) }}</span>
                                     @endif
                                 </div>
-
-                                <!-- زر تفاصيل الجهة -->
-                                <div class="d-grid gap-2 mt-3">
-                                    <a href="{{ route('governments.show', $government->id) }}"
-                                        class="btn btn-outline-primary rounded-pill">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        تفاصيل الجهة
-                                    </a>
-                                </div>
+                                <a href="{{ route('governments.show', $government->id) }}" class="btn btn-primary w-100 rounded-pill">
+                                    <i class="fas fa-info-circle"></i> تفاصيل الجهة
+                                </a>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
-            <div class="card border-0 shadow-sm rounded-4 bg-light">
-                <div class="card-body text-center py-5">
-                    <i class="fas fa-building fa-4x text-muted mb-3"></i>
-                    <h5 class="text-muted">لا توجد جهات تقدم هذه الخدمة حالياً</h5>
-                    <p class="small text-muted">سيتم إضافة جهات جديدة قريباً</p>
-                </div>
+            <div class="empty-state text-center py-5 bg-white rounded-4 border">
+                <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                <p class="text-muted">لا توجد جهات تقدم هذه الخدمة حالياً</p>
             </div>
         @endif
 
-        <!-- قسم الاقتراحات (خدمات مشابهة) -->
-        @if (isset($relatedServices) && $relatedServices->count() > 0)
-            <div class="mt-5 pt-3">
-                <h4 class="fw-bold mb-4">
-                    <i class="fas fa-lightbulb text-primary me-2"></i>
-                    خدمات قد تهمك
-                </h4>
-                <div class="row g-3">
-                    @foreach ($relatedServices->take(4) as $related)
-                        <div class="col-6 col-md-3">
-                            <a href="{{ route('services.show', $related->id) }}" class="text-decoration-none">
-                                <div class="card related-service-card border-0 shadow-sm rounded-3 text-center p-3 h-100">
-                                    @if ($related->icon_image)
-                                        <img src="{{ asset('storage/' . $related->icon_image) }}"
-                                            alt="{{ $related->name }}"
-                                            style="width: 50px; height: 50px; object-fit: contain; margin-bottom: 8px;">
-                                    @else
-                                        <i class="fas fa-ambulance fa-2x text-primary mb-2"></i>
-                                    @endif
-                                    <h6 class="mb-0 text-dark">{{ Str::limit($related->name, 30) }}</h6>
-                                    <small class="text-muted">{{ $related->governments->count() }} جهة</small>
-                                </div>
-                            </a>
+        <!-- Related Services -->
+        @if(isset($relatedServices) && $relatedServices->count() > 0)
+            <div class="section-header mt-5">
+                <h2 class="section-title">خدمات قد تهمك</h2>
+            </div>
+            <div class="related-grid">
+                @foreach($relatedServices->take(4) as $related)
+                    <a href="{{ route('services.show', $related->id) }}" class="related-card">
+                        <div class="related-icon">
+                            @if($related->icon_image)
+                                <img src="{{ asset('storage/' . $related->icon_image) }}" style="width: 30px; height: 30px; object-fit: contain;">
+                            @else
+                                <i class="fas fa-concierge-bell"></i>
+                            @endif
                         </div>
-                    @endforeach
-                </div>
+                        <div class="related-name">{{ Str::limit($related->name, 30) }}</div>
+                        <div class="related-stats">
+                            <small class="text-muted">{{ $related->governments->count() }} جهة</small>
+                        </div>
+                    </a>
+                @endforeach
             </div>
         @endif
     </div>
+</div>
 
-    <!-- Modal عرض الصور -->
-    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content bg-transparent border-0">
-                <div class="modal-header border-0">
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-0 text-center">
-                    <img id="previewImage" src="" class="img-fluid rounded-4"
-                        style="max-height: 80vh; object-fit: contain;">
-                </div>
+<!-- Modal معرض الصور -->
+<div class="modal fade" id="galleryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>معرض الصور</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="galleryModalImage" src="" class="img-fluid" style="max-height: 70vh;">
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button class="btn btn-secondary" onclick="changeImage(-1)">السابق</button>
+                <button class="btn btn-primary" onclick="changeImage(1)">التالي</button>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Modal الوصف الكامل -->
+<div class="modal fade" id="fullDescriptionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>وصف {{ $service->name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="white-space: pre-wrap; line-height: 1.8;">{{ $service->description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/favorite.js') }}"></script>
-    <script>
-        document.querySelectorAll('.service-thumb').forEach(img => {
-            img.addEventListener('click', function() {
-                const previewImage = document.getElementById('previewImage');
-                if (previewImage) {
-                    previewImage.src = this.dataset.fullImg || this.src;
-                }
-            });
-        });
+<script src="{{ asset('js/favorite.js') }}"></script>
+<script>
+    let galleryImages = [];
+    let currentGalleryIndex = 0;
 
-        // دالة فتح مودال عرض الوصف الكامل
-        function openFullDescription() {
-            const modalElement = document.getElementById('fullDescriptionModal');
-            if (modalElement) {
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
-            }
+    @if(count($images) > 0)
+        galleryImages = {!! json_encode(array_map(function($img) { return asset('storage/' . $img); }, $images)) !!};
+
+        window.openGallery = function(index) {
+            currentGalleryIndex = index;
+            document.getElementById('galleryModalImage').src = galleryImages[index];
+            new bootstrap.Modal(document.getElementById('galleryModal')).show();
+        };
+
+        window.changeImage = function(direction) {
+            currentGalleryIndex = (currentGalleryIndex + direction + galleryImages.length) % galleryImages.length;
+            document.getElementById('galleryModalImage').src = galleryImages[currentGalleryIndex];
+        };
+    @endif
+
+    window.openFullDescriptionModal = function() {
+        new bootstrap.Modal(document.getElementById('fullDescriptionModal')).show();
+    };
+
+    window.toggleDetails = function(id) {
+        const details = document.getElementById(`details_${id}`);
+        const icon = document.getElementById(`icon_${id}`);
+        const text = document.getElementById(`text_${id}`);
+
+        if (details.style.display === 'none' || details.style.display === '') {
+            details.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+            text.innerText = 'إخفاء التفاصيل';
+        } else {
+            details.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+            text.innerText = 'عرض التفاصيل';
         }
+    };
 
-        function toggleGovernmentDetails(id) {
-            const details = document.getElementById(`details_${id}`);
-            const icon = document.getElementById(`icon_${id}`);
-            const text = document.getElementById(`text_${id}`);
-
-            if (details.style.display === 'none') {
-                details.style.display = 'block';
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-up');
-                text.innerText = 'إخفاء التفاصيل';
+    // Favorite button
+    document.getElementById('favoriteBtn')?.addEventListener('click', function() {
+        fetch('{{ route("favorite.service.toggle") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ id: {{ $service->id }}, type: 'service' })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.favorited) {
+                this.classList.add('active');
+                this.innerHTML = '<i class="fas fa-heart"></i><span>تمت الإضافة</span>';
             } else {
-                details.style.display = 'none';
-                icon.classList.remove('fa-chevron-up');
-                icon.classList.add('fa-chevron-down');
-                text.innerText = 'عرض التفاصيل';
+                this.classList.remove('active');
+                this.innerHTML = '<i class="fas fa-heart"></i><span>أضف للمفضلة</span>';
             }
-        }
-    </script>
+        })
+        .catch(error => console.error('Error:', error));
+    });
+</script>
 @endpush

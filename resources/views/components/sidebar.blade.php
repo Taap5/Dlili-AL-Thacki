@@ -94,14 +94,20 @@
 </div>
 
 <style>
-    /* ===== الشريط الجانبي ===== */
+    /* ===== الشريط الجانبي المحسّن ===== */
+    :root {
+        --primary-blue: #2f3e9e;
+        --primary-light: #5a6fc9;
+        --primary-dark: #1a2366;
+    }
+
     .sidebar {
         position: fixed;
         top: 0;
-        right: -360px;
-        width: 340px;
+        right: -380px;
+        width: 360px;
         height: 100%;
-        background: linear-gradient(135deg, #ffffff 0%, #fef9f0 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         box-shadow: -5px 0 30px rgba(0, 0, 0, 0.1);
         z-index: 1050;
         transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -137,7 +143,7 @@
     /* ===== رأس الشريط ===== */
     .sidebar-header {
         padding: 30px 24px 24px;
-         background: linear-gradient(135deg, #5164c0 0%, #2a2f3e 100%);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #171e3a 100%);
         position: relative;
         overflow: hidden;
     }
@@ -190,7 +196,7 @@
         height: 64px;
         border-radius: 50%;
         overflow: hidden;
-        background: linear-gradient(135deg, #ffffff, #f0f4ff);
+        background: white;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         flex-shrink: 0;
     }
@@ -201,9 +207,8 @@
         object-fit: cover;
     }
 
-    /* لون خلفية الأيقونة الافتراضية - أغمق وأكثر وضوحاً */
     .user-avatar-placeholder {
-        background: linear-gradient(135deg, #1e2a6e, #2f3e9e);
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
         display: flex;
         align-items: center;
         justify-content: center;
@@ -238,7 +243,6 @@
         overflow-y: auto;
     }
 
-    /* تخصيص شريط التمرير */
     .sidebar-body::-webkit-scrollbar {
         width: 4px;
     }
@@ -262,13 +266,13 @@
         margin: 0;
     }
 
-    /* روابط القائمة */
+    /* روابط القائمة المحسّنة */
     .sidebar-link {
         display: flex;
         align-items: center;
         gap: 14px;
         padding: 12px 24px;
-        color: #4a5568;
+        color: #475569;
         text-decoration: none;
         transition: all 0.2s ease;
         font-size: 15px;
@@ -347,21 +351,21 @@
     /* الفاصل */
     .sidebar-divider {
         height: 1px;
-        background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
         margin: 16px 24px;
     }
 
     /* ===== تذييل الشريط ===== */
     .sidebar-footer {
         padding: 20px 24px 30px;
-        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        border-top: 1px solid #e2e8f0;
     }
 
     .sidebar-logout-btn {
         width: 100%;
         padding: 12px;
         background: linear-gradient(135deg, #fff5f5, #ffffff);
-        border: 1px solid #f0d0d0;
+        border: 1px solid #fee2e2;
         border-radius: 12px;
         color: #dc3545;
         text-align: center;
@@ -439,3 +443,44 @@
         }
     }
 </style>
+
+<script>
+    // JavaScript لفتح وإغلاق الشريط الجانبي
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const closeBtn = document.getElementById('closeSidebar');
+        const toggleBtn = document.getElementById('sidebarToggle'); // الزر الذي يفتح الشريط
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', openSidebar);
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeSidebar);
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebar);
+        }
+
+        // إغلاق الشريط بالضغط على ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+        });
+    });
+</script>
