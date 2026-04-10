@@ -13,15 +13,17 @@
             </div>
 
             <!-- روابط سريعة -->
-            <div class="footer-col">
-                <h5>روابط سريعة</h5>
-                <ul>
-                    <li><a href="{{ route('home') }}"><i class="fas fa-home"></i> الرئيسية</a></li>
-                    <li><a href="{{ route('services.index') }}"><i class="fas fa-concierge-bell"></i> الخدمات</a></li>
-                    <li><a href="{{ route('governments.index') }}"><i class="fas fa-building"></i> الجهات الحكومية</a></li>
-                    <li><a href="{{ route('help') }}"><i class="fas fa-question-circle"></i> المساعدة</a></li>
-                </ul>
-            </div>
+  <!-- روابط سريعة -->
+<div class="footer-col">
+    <h5>روابط سريعة</h5>
+    <ul>
+        <li><a href="{{ route('home') }}"><i class="fas fa-home"></i> الرئيسية</a></li>
+        <li><a href="{{ route('services.index') }}"><i class="fas fa-concierge-bell"></i> الخدمات</a></li>
+        <li><a href="{{ route('governments.index') }}"><i class="fas fa-building"></i> الجهات الحكومية</a></li>
+        <li><a href="{{ route('help') }}"><i class="fas fa-question-circle"></i> المساعدة</a></li>
+        <li><a href="{{ route('offers.index') }}"><i class="fas fa-gift"></i> العروض الخاصة</a></li>
+    </ul>
+</div>
 
             <!-- خدمات المستخدم -->
             <div class="footer-col">

@@ -651,6 +651,7 @@
     </style>
 
     <div class="admin-container py-5">
+        <x-admin-breadcrumb :items="[['name' => 'إدارة الخدمات']]" />
         <!-- رأس الصفحة -->
         <div class="page-header">
             <h1 class="page-title">

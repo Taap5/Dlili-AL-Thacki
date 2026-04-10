@@ -99,6 +99,17 @@ Route::middleware('auth')->group(function () {
         // إدارة المستخدمين
         Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole'])->name('users.role');
         Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('users.destroy');
+        // ========== أضف Routes العروض هنا ==========
+        Route::get('/governments/{governmentId}/offers', [App\Http\Controllers\Admin\GovernmentOfferController::class, 'index'])
+            ->name('government-offers.index');
+        Route::post('/governments/{governmentId}/offers', [App\Http\Controllers\Admin\GovernmentOfferController::class, 'store'])
+            ->name('government-offers.store');
+        Route::put('/governments/{governmentId}/offers/{offerId}', [App\Http\Controllers\Admin\GovernmentOfferController::class, 'update'])
+            ->name('government-offers.update');
+        Route::delete('/governments/{governmentId}/offers/{offerId}', [App\Http\Controllers\Admin\GovernmentOfferController::class, 'destroy'])
+            ->name('government-offers.destroy');
+        Route::post('/governments/{governmentId}/offers/{offerId}/toggle', [App\Http\Controllers\Admin\GovernmentOfferController::class, 'toggleActive'])
+            ->name('government-offers.toggle');
     });
     Route::get('/api/get-location', [AdminController::class, 'getLocationApi']);
 });
@@ -121,3 +132,6 @@ Route::get('/governments/{id}/reviews', [ReviewController::class, 'getReviews'])
 // ===== صفحات إضافية =====
 Route::view('/help', 'pages.navbar-footer-pages.help')->name('help');
 Route::get('/emergency/nearest', [App\Http\Controllers\EmergencyController::class, 'nearest'])->name('emergency.nearest');
+// ===== مسارات العروض الخاصة =====
+Route::get('/offers', [App\Http\Controllers\OffersController::class, 'index'])->name('offers.index');
+Route::get('/offers/{id}', [App\Http\Controllers\OffersController::class, 'show'])->name('offers.show');

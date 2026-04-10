@@ -29,7 +29,6 @@
                 if (!isset($groupedServices[$groupName])) {
                     $groupedServices[$groupName] = [];
                 }
-
                 $groupedServices[$groupName][] = (object) [
                     'display_name' => $subName,
                     'original_name' => $serviceName,
@@ -39,6 +38,18 @@
                     'work_hours' => $service->pivot->work_hours,
                     'price' => $service->pivot->price,
                     'icon_image' => $service->icon_image,
+                    // الحقول الجديدة
+                    'processing_time' => $service->pivot->processing_time ?? '',
+                    'office_location' => $service->pivot->office_location ?? '',
+                    'required_documents' => $service->pivot->required_documents ?? '',
+                    'steps' => $service->pivot->steps ?? '',
+                    'conditions' => $service->pivot->conditions ?? '',
+                    'notes' => $service->pivot->notes ?? '',
+                    'requires_appointment' => $service->pivot->requires_appointment ?? false,
+                    'appointment_phone' => $service->pivot->appointment_phone ?? '',
+                    'doctor_specialist' => $service->pivot->doctor_specialist ?? '',
+                    'hospital_stay_duration' => $service->pivot->hospital_stay_duration ?? '',
+                    'emergency_notes' => $service->pivot->emergency_notes ?? '',
                 ];
             } else {
                 $standaloneServices[] = $service;
@@ -98,7 +109,110 @@
                         <span class="text-secondary">{{ $government->address }}</span>
                     </div>
                 @endif
+                {{-- حالة الدوام وساعات العمل --}}
+                @php
+                    $isOpen = $government->isOpen();
+                    $formattedHours = $government->getFormattedWorkHours();
+                @endphp
+                <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                    <div
+                        class="status-badge {{ $isOpen === true ? 'status-open' : ($isOpen === false ? 'status-closed' : 'status-unknown') }}">
+                        <i
+                            class="fas {{ $isOpen === true ? 'fa-door-open' : ($isOpen === false ? 'fa-clock' : 'fa-question') }}"></i>
+                        <span>
+                            @if ($isOpen === true)
+                                مفتوح الآن
+                            @elseif($isOpen === false)
+                                مغلق
+                            @else
+                                غير معروف
+                            @endif
+                        </span>
+                    </div>
+                    @if ($formattedHours)
+                        <span class="text-muted small work-hours-text" title="{{ $formattedHours }}">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            {{ Str::limit($formattedHours, 50) }}
+                            @if (strlen($formattedHours) > 50)
+                                <button class="btn btn-link btn-sm p-0 ms-1" onclick="showFullWorkHours()"
+                                    style="font-size: 11px;">عرض الكل</button>
+                            @endif
+                        </span>
+                    @endif
+                </div>
 
+                {{-- مودال عرض ساعات العمل الكاملة --}}
+                <div class="modal fade" id="workHoursModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header"
+                                style="background: linear-gradient(135deg, #2f3e9e, #5a6fc9); color: white;">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-clock me-2"></i>
+                                    ساعات العمل - {{ $government->name }}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                @php
+                                    $hours = $government->getWorkingHours();
+                                @endphp
+
+                                @if (isset($hours['is_24h']) && $hours['is_24h'] === true)
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-clock fa-3x text-success mb-3"></i>
+                                        <h5 class="text-success">مفتوح 24 ساعة</h5>
+                                        <p class="text-muted">الجهة مفتوحة طوال أيام الأسبوع على مدار الساعة</p>
+                                    </div>
+                                @else
+                                    <div class="work-hours-table">
+                                        @php
+                                            $daysMap = [
+                                                'saturday' => 'السبت',
+                                                'sunday' => 'الأحد',
+                                                'monday' => 'الاثنين',
+                                                'tuesday' => 'الثلاثاء',
+                                                'wednesday' => 'الأربعاء',
+                                                'thursday' => 'الخميس',
+                                                'friday' => 'الجمعة',
+                                            ];
+                                        @endphp
+
+                                        @foreach ($daysMap as $key => $name)
+                                            @php
+                                                $dayHours = $hours[$key] ?? null;
+                                                $isClosed = empty($dayHours['open']) || empty($dayHours['close']);
+                                            @endphp
+                                            <div class="work-hour-row {{ $isClosed ? 'closed-row' : '' }}">
+                                                <div class="day-name">{{ $name }}</div>
+                                                <div class="day-hours">
+                                                    @if ($isClosed)
+                                                        <span class="closed-text">مغلق</span>
+                                                    @else
+                                                        <span class="hour-time">{{ $dayHours['open'] }}</span>
+                                                        <i class="fas fa-arrow-left mx-2 text-muted"></i>
+                                                        <span class="hour-time">{{ $dayHours['close'] }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    function showFullWorkHours() {
+                        const modal = new bootstrap.Modal(document.getElementById('workHoursModal'));
+                        modal.show();
+                    }
+                </script>
                 @if ($government->description)
                     @php
                         $fullDescription = $government->description;
@@ -226,6 +340,79 @@
                     </div>
                 </div>
             </div>
+            {{-- العروض الخاصة --}}
+            @if ($government->offers && $government->offers->count() > 0)
+                <div class="accordion-item-custom mb-3">
+                    <div class="accordion-header-custom">
+                        <button class="accordion-btn collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#offersCard">
+                            <div class="accordion-icon"><i class="fas fa-gift"></i></div>
+                            <span class="accordion-title">عروض ومميزات خاصة</span>
+                            <span class="badge-count">{{ $government->offers->count() }}</span>
+                            <i class="fas fa-chevron-down accordion-arrow"></i>
+                        </button>
+                    </div>
+                    <div id="offersCard" class="accordion-collapse collapse" data-bs-parent="#govAccordion">
+                        <div class="accordion-body-custom">
+                            <div class="offers-grid">
+                                @foreach ($government->offers as $offer)
+                                    <div
+                                        class="offer-card {{ $offer->isCurrentlyActive() ? 'active-offer' : 'expired-offer' }}">
+                                        <div class="offer-icon">
+                                            <i class="{{ $offer->icon ?? 'fas fa-tag' }}"></i>
+                                        </div>
+                                        <div class="offer-content">
+                                            <div class="offer-title">
+                                                {{ $offer->title }}
+                                                @if ($offer->is_permanent)
+                                                    <span class="badge bg-success ms-2">مستمر</span>
+                                                @elseif(!$offer->isCurrentlyActive())
+                                                    <span class="badge bg-secondary ms-2">منتهي</span>
+                                                @endif
+                                            </div>
+
+                                            @if ($offer->description)
+                                                <div class="offer-description">{{ $offer->description }}</div>
+                                            @endif
+
+                                            @if ($offer->target_audience)
+                                                <div class="offer-audience mt-2">
+                                                    <i class="fas fa-users"></i>
+                                                    <span>الفئة المستهدفة: {{ $offer->target_audience }}</span>
+                                                </div>
+                                            @endif
+
+                                            @if ($offer->terms)
+                                                <div class="offer-terms mt-2">
+                                                    <i class="fas fa-file-contract"></i>
+                                                    <span>{{ $offer->terms }}</span>
+                                                </div>
+                                            @endif
+
+                                            @if ($offer->start_date && $offer->end_date && !$offer->is_permanent)
+                                                <div class="offer-date mt-2">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                    <span>من {{ $offer->start_date->format('Y/m/d') }} إلى
+                                                        {{ $offer->end_date->format('Y/m/d') }}</span>
+                                                </div>
+                                            @endif
+
+                                            @if ($offer->contact_number)
+                                                <div class="offer-contact mt-2">
+                                                    <a href="tel:{{ $offer->contact_number }}"
+                                                        class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-phone-alt"></i> استفسار
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
             <!-- الخدمات المتوفرة - نسخة محسنة مع تجميع ديناميكي -->
             <div class="accordion-item-custom mb-3">
                 <div class="accordion-header-custom">
@@ -262,14 +449,26 @@
                                         <div class="service-group-collapse collapse" id="{{ $groupId }}">
                                             <div class="services-grid-horizontal">
                                                 @foreach ($subServices as $subService)
-                                                    <div class="service-grid-item" <div class="service-grid-item"
+                                                    <div class="service-grid-item"
                                                         data-service-name='{{ json_encode($subService->display_name) }}'
-                                                        data-service-desc='{{ json_encode($subService->description ?? 'لا يوجد وصف') }}'
+                                                        data-service-desc='{{ json_encode($subService->description ?? '') }}'
                                                         data-service-contact='{{ json_encode($subService->contact_number) }}'
                                                         data-service-hours='{{ json_encode($subService->work_hours) }}'
                                                         data-service-price='{{ json_encode($subService->price) }}'
                                                         data-service-id='{{ json_encode($subService->service_id) }}'
                                                         data-service-icon='{{ json_encode($subService->icon_image) }}'
+                                                        {{-- الحقول الجديدة --}}
+                                                        data-processing-time='{{ json_encode($subService->processing_time ?? '') }}'
+                                                        data-office-location='{{ json_encode($subService->office_location ?? '') }}'
+                                                        data-required-documents='{{ json_encode($subService->required_documents ?? '') }}'
+                                                        data-steps='{{ json_encode($subService->steps ?? '') }}'
+                                                        data-conditions='{{ json_encode($subService->conditions ?? '') }}'
+                                                        data-notes='{{ json_encode($subService->notes ?? '') }}'
+                                                        data-requires-appointment='{{ json_encode($subService->requires_appointment ?? false) }}'
+                                                        data-appointment-phone='{{ json_encode($subService->appointment_phone ?? '') }}'
+                                                        data-doctor-specialist='{{ json_encode($subService->doctor_specialist ?? '') }}'
+                                                        data-hospital-stay-duration='{{ json_encode($subService->hospital_stay_duration ?? '') }}'
+                                                        data-emergency-notes='{{ json_encode($subService->emergency_notes ?? '') }}'
                                                         onclick="showServiceDetailsModalFromData(this)">
                                                         <div class="grid-item-icon">
                                                             @if ($subService->icon_image)
@@ -290,7 +489,7 @@
                                     </div>
                                 @endforeach
 
-                                {{-- 2. عرض الخدمات الأخرى (التي لا تحتوي على -) --}}
+
                                 {{-- 2. عرض الخدمات الأخرى (التي لا تحتوي على -) --}}
                                 @if (count($standaloneServices) > 0)
                                     @php $otherId = 'group-other-services'; @endphp
@@ -311,33 +510,47 @@
                                         <div class="service-group-collapse collapse" id="{{ $otherId }}">
                                             <div class="services-grid-horizontal">
                                                 @foreach ($standaloneServices as $service)
-                                                    <div class="service-grid-item"
-                                                        data-service-name='{{ json_encode($service->name) }}'
-                                                        data-service-desc='{{ json_encode($service->pivot->description ?? ($service->description ?? 'لا يوجد وصف')) }}'
-                                                        data-service-contact='{{ json_encode($service->pivot->contact_number) }}'
-                                                        data-service-hours='{{ json_encode($service->pivot->work_hours) }}'
-                                                        data-service-price='{{ json_encode($service->pivot->price) }}'
-                                                        data-service-id='{{ json_encode($service->id) }}'
-                                                        data-service-icon='{{ json_encode($service->icon_image) }}'
-                                                        onclick="showServiceDetailsModalFromData(this)">
-                                                        <div class="grid-item-icon">
-                                                            @if ($service->icon_image)
-                                                                <img src="{{ asset('storage/' . $service->icon_image) }}"
-                                                                    alt="{{ $service->name }}"
-                                                                    style="width: 32px; height: 32px; object-fit: contain;">
-                                                            @else
-                                                                <i class="fas fa-ambulance"></i>
+                                                    @foreach ($standaloneServices as $service)
+                                                        <div class="service-grid-item"
+                                                            data-service-name='{{ json_encode($service->name) }}'
+                                                            data-service-desc='{{ json_encode($service->pivot->description ?? ($service->description ?? '')) }}'
+                                                            data-service-contact='{{ json_encode($service->pivot->contact_number) }}'
+                                                            data-service-hours='{{ json_encode($service->pivot->work_hours) }}'
+                                                            data-service-price='{{ json_encode($service->pivot->price) }}'
+                                                            data-service-id='{{ json_encode($service->id) }}'
+                                                            data-service-icon='{{ json_encode($service->icon_image) }}'
+                                                            {{-- الحقول الجديدة --}}
+                                                            data-processing-time='{{ json_encode($service->pivot->processing_time) }}'
+                                                            data-office-location='{{ json_encode($service->pivot->office_location) }}'
+                                                            data-required-documents='{{ json_encode($service->pivot->required_documents) }}'
+                                                            data-steps='{{ json_encode($service->pivot->steps) }}'
+                                                            data-conditions='{{ json_encode($service->pivot->conditions) }}'
+                                                            data-notes='{{ json_encode($service->pivot->notes) }}'
+                                                            data-requires-appointment='{{ json_encode($service->pivot->requires_appointment) }}'
+                                                            data-appointment-phone='{{ json_encode($service->pivot->appointment_phone) }}'
+                                                            data-doctor-specialist='{{ json_encode($service->pivot->doctor_specialist) }}'
+                                                            data-hospital-stay-duration='{{ json_encode($service->pivot->hospital_stay_duration) }}'
+                                                            data-emergency-notes='{{ json_encode($service->pivot->emergency_notes) }}'
+                                                            onclick="showServiceDetailsModalFromData(this)">
+                                                            <div class="grid-item-icon">
+                                                                @if ($service->icon_image)
+                                                                    <img src="{{ asset('storage/' . $service->icon_image) }}"
+                                                                        alt="{{ $service->name }}"
+                                                                        style="width: 32px; height: 32px; object-fit: contain;">
+                                                                @else
+                                                                    <i class="fas fa-ambulance"></i>
+                                                                @endif
+                                                            </div>
+                                                            <div class="grid-item-name">
+                                                                {{ Str::limit($service->name, 20) }}
+                                                            </div>
+                                                            @if ($service->pivot->description)
+                                                                <div class="grid-item-desc">
+                                                                    {{ Str::limit($service->pivot->description, 25) }}
+                                                                </div>
                                                             @endif
                                                         </div>
-                                                        <div class="grid-item-name">
-                                                            {{ Str::limit($service->name, 20) }}
-                                                        </div>
-                                                        @if ($service->pivot->description)
-                                                            <div class="grid-item-desc">
-                                                                {{ Str::limit($service->pivot->description, 25) }}
-                                                            </div>
-                                                        @endif
-                                                    </div>
+                                                    @endforeach
                                                 @endforeach
                                             </div>
                                         </div>
@@ -428,16 +641,86 @@
                     <div class="accordion-body-custom">
                         @if ($government->contact_number)
                             <div class="contact-info-custom">
-                                <div class="contact-item-custom">
-                                    <div class="contact-icon-custom"><i class="fas fa-phone-alt"></i></div>
-                                    <div class="contact-details">
-                                        <div class="contact-label">رقم الهاتف</div>
-                                        <div class="contact-value">
-                                            <a href="tel:{{ $government->contact_number }}"
-                                                class="text-decoration-none">{{ $government->contact_number }}</a>
+                                {{-- رقم الهاتف --}}
+                                @if ($government->contact_number)
+                                    <div class="contact-item-custom">
+                                        <div class="contact-icon-custom"><i class="fas fa-phone-alt"></i></div>
+                                        <div class="contact-details">
+                                            <div class="contact-label">رقم الهاتف</div>
+                                            <div class="contact-value">
+                                                <a href="tel:{{ $government->contact_number }}"
+                                                    class="text-decoration-none">{{ $government->contact_number }}</a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
+
+                                {{-- رقم الواتساب --}}
+                                @if ($government->whatsapp_number)
+                                    <div class="contact-item-custom">
+                                        <div class="contact-icon-custom" style="background: #e8f5e9;"><i
+                                                class="fab fa-whatsapp" style="color: #25D366;"></i></div>
+                                        <div class="contact-details">
+                                            <div class="contact-label">واتساب</div>
+                                            <div class="contact-value">
+                                                <a href="https://wa.me/{{ $government->whatsapp_number }}"
+                                                    class="text-decoration-none"
+                                                    target="_blank">{{ $government->whatsapp_number }}</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- البريد الإلكتروني --}}
+                                @if ($government->email)
+                                    <div class="contact-item-custom">
+                                        <div class="contact-icon-custom"><i class="fas fa-envelope"></i></div>
+                                        <div class="contact-details">
+                                            <div class="contact-label">البريد الإلكتروني</div>
+                                            <div class="contact-value">
+                                                <a href="mailto:{{ $government->email }}"
+                                                    class="text-decoration-none">{{ $government->email }}</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- وصف الموقع التفصيلي --}}
+                                @if ($government->location_description)
+                                    <div class="contact-item-custom">
+                                        <div class="contact-icon-custom"><i class="fas fa-info-circle"></i></div>
+                                        <div class="contact-details">
+                                            <div class="contact-label">وصف الموقع</div>
+                                            <div class="contact-value">{{ $government->location_description }}</div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- روابط التواصل الاجتماعي --}}
+                                @if ($government->facebook_url || $government->telegram_url)
+                                    <div class="contact-item-custom">
+                                        <div class="contact-icon-custom"><i class="fas fa-share-alt"></i></div>
+                                        <div class="contact-details">
+                                            <div class="contact-label">تابعنا على</div>
+                                            <div class="contact-value">
+                                                <div class="d-flex gap-2 mt-1">
+                                                    @if ($government->facebook_url)
+                                                        <a href="{{ $government->facebook_url }}" target="_blank"
+                                                            class="btn btn-sm btn-outline-primary">
+                                                            <i class="fab fa-facebook-f"></i> فيسبوك
+                                                        </a>
+                                                    @endif
+                                                    @if ($government->telegram_url)
+                                                        <a href="{{ $government->telegram_url }}" target="_blank"
+                                                            class="btn btn-sm btn-outline-info">
+                                                            <i class="fab fa-telegram-plane"></i> تليجرام
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         @else
                             <div class="empty-state"><i class="fas fa-phone-slash"></i>
@@ -1377,6 +1660,182 @@
         .accordion-btn:not(.collapsed) .accordion-arrow {
             transform: rotate(180deg) !important;
         }
+
+        /* تنسيقات العروض الخاصة */
+        .offers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .offer-card {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, #fff5e8, #ffffff);
+            border-radius: 16px;
+            border-right: 4px solid #ffc107;
+            transition: all 0.2s;
+        }
+
+        .offer-card.active-offer {
+            background: linear-gradient(135deg, #e8f5e9, #ffffff);
+            border-right-color: #4caf50;
+        }
+
+        .offer-card.expired-offer {
+            opacity: 0.6;
+            background: #f8f9fa;
+            border-right-color: #9e9e9e;
+        }
+
+        .offer-icon {
+            width: 48px;
+            height: 48px;
+            background: #fff3e0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #ff9800;
+            flex-shrink: 0;
+        }
+
+        .active-offer .offer-icon {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+
+        .offer-content {
+            flex: 1;
+        }
+
+        .offer-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a2c3e;
+            margin-bottom: 8px;
+        }
+
+        .offer-description {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .offer-audience,
+        .offer-terms,
+        .offer-date {
+            font-size: 12px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .offer-audience i,
+        .offer-terms i,
+        .offer-date i {
+            width: 18px;
+            color: #2f3e9e;
+        }
+
+        .offer-contact {
+            margin-top: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .offer-card {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .offer-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+
+        /* حالة الدوام */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-open {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-closed {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        /* تنسيقات ساعات العمل */
+        .work-hours-text {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .work-hours-text:hover {
+            color: var(--primary) !important;
+            text-decoration: underline;
+        }
+
+        .work-hours-table {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .work-hour-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-right: 3px solid #2f3e9e;
+        }
+
+        .work-hour-row.closed-row {
+            background: #fff5f5;
+            border-right-color: #dc3545;
+        }
+
+        .day-name {
+            font-weight: 600;
+            color: #1a2c3e;
+        }
+
+        .day-hours {
+            font-size: 14px;
+        }
+
+        .hour-time {
+            font-weight: 500;
+            color: #2f3e9e;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .closed-text {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .status-unknown {
+            background: #f0f0f0;
+            color: #9e9e9e;
+        }
     </style>
 
     <script>
@@ -1684,7 +2143,7 @@
             const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
             modal.show();
         }
-        // دالة جديدة تعتمد على data-attributes بدلاً من تمرير البيانات مباشرة
+
         function showServiceDetailsModalFromData(element) {
             try {
                 const service = {
@@ -1694,44 +2153,201 @@
                     hours: JSON.parse(element.dataset.serviceHours || '""'),
                     price: JSON.parse(element.dataset.servicePrice || '""'),
                     serviceId: JSON.parse(element.dataset.serviceId || '""'),
-                    icon_image: JSON.parse(element.dataset.serviceIcon || '""')
+                    icon_image: JSON.parse(element.dataset.serviceIcon || '""'),
+                    // الحقول الجديدة - تأكد من إضافتها في data attributes
+                    processing_time: JSON.parse(element.dataset.processingTime || '""'),
+                    office_location: JSON.parse(element.dataset.officeLocation || '""'),
+                    required_documents: JSON.parse(element.dataset.requiredDocuments || '""'),
+                    steps: JSON.parse(element.dataset.steps || '""'),
+                    conditions: JSON.parse(element.dataset.conditions || '""'),
+                    notes: JSON.parse(element.dataset.notes || '""'),
+                    requires_appointment: JSON.parse(element.dataset.requiresAppointment || 'false'),
+                    appointment_phone: JSON.parse(element.dataset.appointmentPhone || '""'),
+                    doctor_specialist: JSON.parse(element.dataset.doctorSpecialist || '""'),
+                    hospital_stay_duration: JSON.parse(element.dataset.hospitalStayDuration || '""'),
+                    emergency_notes: JSON.parse(element.dataset.emergencyNotes || '""')
                 };
 
                 console.log('Service from data:', service);
 
-                let detailsHtml = `<p class="text-muted">${service.description || 'لا يوجد وصف مفصل'}</p>`;
+                let detailsHtml = '';
 
+                // الوصف
+                if (service.description && service.description !== 'null' && service.description !== '') {
+                    detailsHtml += `<p class="text-muted">${escapeHtml(service.description)}</p>`;
+                }
+
+                // الأوراق المطلوبة
+                if (service.required_documents && service.required_documents !== 'null' && service.required_documents !==
+                    '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-file-alt"></i>
+                    <div class="info-content">
+                        <div class="info-label">📄 الأوراق المطلوبة</div>
+                        <div class="info-value" style="white-space: pre-line;">${escapeHtml(service.required_documents)}</div>
+                    </div>
+                </div>`;
+                }
+
+                // الإجراءات خطوة بخطوة
+                if (service.steps && service.steps !== 'null' && service.steps !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-list-ol"></i>
+                    <div class="info-content">
+                        <div class="info-label">📋 الإجراءات خطوة بخطوة</div>
+                        <div class="info-value" style="white-space: pre-line;">${escapeHtml(service.steps)}</div>
+                    </div>
+                </div>`;
+                }
+
+                // مدة الإنجاز
+                if (service.processing_time && service.processing_time !== 'null' && service.processing_time !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-hourglass-half"></i>
+                    <div class="info-content">
+                        <div class="info-label">⏱️ مدة الإنجاز</div>
+                        <div class="info-value">${escapeHtml(service.processing_time)}</div>
+                    </div>
+                </div>`;
+                }
+
+                // موقع التقديم
+                if (service.office_location && service.office_location !== 'null' && service.office_location !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-door-open"></i>
+                    <div class="info-content">
+                        <div class="info-label">📍 موقع التقديم</div>
+                        <div class="info-value">${escapeHtml(service.office_location)}</div>
+                    </div>
+                </div>`;
+                }
+
+                // الشروط
+                if (service.conditions && service.conditions !== 'null' && service.conditions !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-clipboard-list"></i>
+                    <div class="info-content">
+                        <div class="info-label">📜 الشروط</div>
+                        <div class="info-value" style="white-space: pre-line;">${escapeHtml(service.conditions)}</div>
+                    </div>
+                </div>`;
+                }
+
+                // ملاحظات إضافية
+                if (service.notes && service.notes !== 'null' && service.notes !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-pen-alt"></i>
+                    <div class="info-content">
+                        <div class="info-label">📝 ملاحظات إضافية</div>
+                        <div class="info-value" style="white-space: pre-line;">${escapeHtml(service.notes)}</div>
+                    </div>
+                </div>`;
+                }
+
+                // رقم الاتصال الخاص
                 if (service.contact && service.contact !== 'null' && service.contact !== '') {
                     detailsHtml += `
                 <div class="info-box">
                     <i class="fas fa-phone-alt"></i>
                     <div class="info-content">
-                        <div class="info-label">رقم الاتصال</div>
-                        <div class="info-value"><a href="tel:${service.contact}">${service.contact}</a></div>
+                        <div class="info-label">📞 رقم الاتصال الخاص</div>
+                        <div class="info-value"><a href="tel:${escapeHtml(service.contact)}">${escapeHtml(service.contact)}</a></div>
                     </div>
                 </div>`;
                 }
 
+                // ساعات العمل
                 if (service.hours && service.hours !== 'null' && service.hours !== '') {
                     detailsHtml += `
                 <div class="info-box">
                     <i class="fas fa-clock"></i>
                     <div class="info-content">
-                        <div class="info-label">ساعات العمل</div>
-                        <div class="info-value">${service.hours}</div>
+                        <div class="info-label">🕐 ساعات العمل لهذه الخدمة</div>
+                        <div class="info-value">${escapeHtml(service.hours)}</div>
                     </div>
                 </div>`;
                 }
 
+                // السعر
                 if (service.price && service.price !== 'null' && service.price !== '') {
                     detailsHtml += `
                 <div class="info-box">
                     <i class="fas fa-tag"></i>
                     <div class="info-content">
-                        <div class="info-label">الرسوم</div>
-                        <div class="info-value"><span style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border-radius: 30px; padding: 4px 14px; font-size: 12px;">${service.price}</span></div>
+                        <div class="info-label">💰 الرسوم</div>
+                        <div class="info-value"><span style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border-radius: 30px; padding: 4px 14px; font-size: 12px;">${escapeHtml(service.price)}</span></div>
                     </div>
                 </div>`;
+                }
+
+                // يتطلب حجز مسبق
+                if (service.requires_appointment === true || service.requires_appointment === 'true') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-calendar-check"></i>
+                    <div class="info-content">
+                        <div class="info-label">📅 يتطلب حجز مسبق</div>
+                        <div class="info-value">نعم</div>
+                    </div>
+                </div>`;
+
+                    if (service.appointment_phone && service.appointment_phone !== 'null' && service.appointment_phone !==
+                        '') {
+                        detailsHtml += `
+                    <div class="info-box">
+                        <i class="fas fa-phone-alt"></i>
+                        <div class="info-content">
+                            <div class="info-label">📞 رقم الحجز</div>
+                            <div class="info-value"><a href="tel:${escapeHtml(service.appointment_phone)}">${escapeHtml(service.appointment_phone)}</a></div>
+                        </div>
+                    </div>`;
+                    }
+                }
+
+                // حقول خاصة بالمستشفيات
+                if (service.doctor_specialist && service.doctor_specialist !== 'null' && service.doctor_specialist !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-user-md"></i>
+                    <div class="info-content">
+                        <div class="info-label">👨‍⚕️ الطبيب/القسم المختص</div>
+                        <div class="info-value">${escapeHtml(service.doctor_specialist)}</div>
+                    </div>
+                </div>`;
+                }
+
+                if (service.hospital_stay_duration && service.hospital_stay_duration !== 'null' && service
+                    .hospital_stay_duration !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-procedures"></i>
+                    <div class="info-content">
+                        <div class="info-label">🏥 مدة التنويم المتوقعة</div>
+                        <div class="info-value">${escapeHtml(service.hospital_stay_duration)}</div>
+                    </div>
+                </div>`;
+                }
+
+                if (service.emergency_notes && service.emergency_notes !== 'null' && service.emergency_notes !== '') {
+                    detailsHtml += `
+                <div class="info-box">
+                    <i class="fas fa-ambulance"></i>
+                    <div class="info-content">
+                        <div class="info-label">🚨 ملاحظات للطوارئ</div>
+                        <div class="info-value" style="white-space: pre-line;">${escapeHtml(service.emergency_notes)}</div>
+                    </div>
+                </div>`;
+                }
+
+                // إذا لم توجد أي بيانات
+                if (detailsHtml === '') {
+                    detailsHtml = '<p class="text-muted text-center">لا توجد تفاصيل إضافية لهذه الخدمة</p>';
                 }
 
                 // عرض اسم الخدمة

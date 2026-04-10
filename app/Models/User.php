@@ -7,6 +7,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+
 /**
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Government[] $favoriteGovernments
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OfferService[] $favoriteServices
@@ -71,6 +72,18 @@ class User extends Authenticatable
     public function isServiceFavorite($serviceId)
     {
         return $this->favoriteServices()->where('service_id', $serviceId)->exists();
+    }
+
+    // تبديل حالة مفضلة الخدمة (إضافة/حذف)
+    public function toggleServiceFavorite($serviceId)
+    {
+        if ($this->isServiceFavorite($serviceId)) {
+            $this->favoriteServices()->detach($serviceId);
+            return false; // تمت الإزالة
+        } else {
+            $this->favoriteServices()->attach($serviceId);
+            return true; // تمت الإضافة
+        }
     }
 
     // ===== علاقات المشروع الأخرى =====

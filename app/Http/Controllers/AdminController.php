@@ -135,9 +135,16 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
+            'short_description' => 'nullable|string|max:255', // جديد
             'search_address' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255', // جديد
+            'whatsapp_number' => 'nullable|string|max:20', // جديد
             'work_hours' => 'nullable|string|max:50',
+            'location_description' => 'nullable|string', // جديد
+            'facebook_url' => 'nullable|url|max:255', // جديد
+            'telegram_url' => 'nullable|url|max:255', // جديد
+            'keywords' => 'nullable|string|max:500', // جديد
             'category_id' => 'required|exists:government_categories,id',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
@@ -147,6 +154,18 @@ class AdminController extends Controller
             'services.*.contact_number' => 'nullable|string|max:20',
             'services.*.work_hours' => 'nullable|string|max:50',
             'services.*.price' => 'nullable|string|max:100',
+            // الحقول الجديدة للخدمات
+            'services.*.processing_time' => 'nullable|string|max:100',
+            'services.*.office_location' => 'nullable|string|max:255',
+            'services.*.required_documents' => 'nullable|string',
+            'services.*.steps' => 'nullable|string',
+            'services.*.conditions' => 'nullable|string',
+            'services.*.notes' => 'nullable|string',
+            'services.*.requires_appointment' => 'nullable|boolean',
+            'services.*.appointment_phone' => 'nullable|string|max:20',
+            'services.*.doctor_specialist' => 'nullable|string|max:255',
+            'services.*.hospital_stay_duration' => 'nullable|string|max:100',
+            'services.*.emergency_notes' => 'nullable|string',
             'location_lat' => 'nullable|string',
             'location_long' => 'nullable|string',
             'formatted_address' => 'nullable|string',
@@ -155,9 +174,18 @@ class AdminController extends Controller
         $governmentData = [
             'name' => $request->name,
             'description' => $request->description,
+            'short_description' => $request->short_description,
             'contact_number' => $request->phone,
+            'email' => $request->email,
+            'whatsapp_number' => $request->whatsapp_number,
             'work_hours' => $request->work_hours,
+           'work_hours_json' => $request->work_hours_json,
+            'location_description' => $request->location_description,
+            'facebook_url' => $request->facebook_url,
+            'telegram_url' => $request->telegram_url,
+            'keywords' => $request->keywords,
             'government_category_id' => $request->category_id,
+            'is_active' => true,
         ];
 
         // استخدام الحقول المخفية أولاً
@@ -188,6 +216,18 @@ class AdminController extends Controller
                         'contact_number' => $details['contact_number'] ?? null,
                         'work_hours' => $details['work_hours'] ?? null,
                         'price' => $details['price'] ?? null,
+                        // الحقول الجديدة
+                        'processing_time' => $details['processing_time'] ?? null,
+                        'office_location' => $details['office_location'] ?? null,
+                        'required_documents' => $details['required_documents'] ?? null,
+                        'steps' => $details['steps'] ?? null,
+                        'conditions' => $details['conditions'] ?? null,
+                        'notes' => $details['notes'] ?? null,
+                        'requires_appointment' => $details['requires_appointment'] ?? false,
+                        'appointment_phone' => $details['appointment_phone'] ?? null,
+                        'doctor_specialist' => $details['doctor_specialist'] ?? null,
+                        'hospital_stay_duration' => $details['hospital_stay_duration'] ?? null,
+                        'emergency_notes' => $details['emergency_notes'] ?? null,
                     ];
                 }
             }
@@ -204,9 +244,16 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
+            'short_description' => 'nullable|string|max:255',
             'search_address' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'whatsapp_number' => 'nullable|string|max:20',
             'work_hours' => 'nullable|string|max:50',
+            'location_description' => 'nullable|string',
+            'facebook_url' => 'nullable|url|max:255',
+            'telegram_url' => 'nullable|url|max:255',
+            'keywords' => 'nullable|string|max:500',
             'category_id' => 'required|exists:government_categories,id',
             'new_images' => 'nullable|array',
             'new_images.*' => 'image|mimes:jpg,jpeg,png,gif|max:2048',
@@ -217,6 +264,17 @@ class AdminController extends Controller
             'services.*.contact_number' => 'nullable|string|max:20',
             'services.*.work_hours' => 'nullable|string|max:50',
             'services.*.price' => 'nullable|string|max:100',
+            'services.*.processing_time' => 'nullable|string|max:100',
+            'services.*.office_location' => 'nullable|string|max:255',
+            'services.*.required_documents' => 'nullable|string',
+            'services.*.steps' => 'nullable|string',
+            'services.*.conditions' => 'nullable|string',
+            'services.*.notes' => 'nullable|string',
+            'services.*.requires_appointment' => 'nullable|boolean',
+            'services.*.appointment_phone' => 'nullable|string|max:20',
+            'services.*.doctor_specialist' => 'nullable|string|max:255',
+            'services.*.hospital_stay_duration' => 'nullable|string|max:100',
+            'services.*.emergency_notes' => 'nullable|string',
             'location_lat' => 'nullable|string',
             'location_long' => 'nullable|string',
             'formatted_address' => 'nullable|string',
@@ -225,8 +283,16 @@ class AdminController extends Controller
         $governmentData = [
             'name' => $request->name,
             'description' => $request->description,
+            'short_description' => $request->short_description,
             'contact_number' => $request->phone,
+            'email' => $request->email,
+            'whatsapp_number' => $request->whatsapp_number,
             'work_hours' => $request->work_hours,
+            'work_hours_json' => $request->work_hours_json ? json_decode($request->work_hours_json, true) : null,
+            'location_description' => $request->location_description,
+            'facebook_url' => $request->facebook_url,
+            'telegram_url' => $request->telegram_url,
+            'keywords' => $request->keywords,
             'government_category_id' => $request->category_id,
         ];
 
@@ -245,6 +311,7 @@ class AdminController extends Controller
             $governmentData['address'] = $government->address;
         }
 
+        // معالجة الصور (كما هي)
         $currentImages = $government->images ?? [];
 
         if ($request->has('remove_images')) {
@@ -275,6 +342,17 @@ class AdminController extends Controller
                         'contact_number' => $details['contact_number'] ?? null,
                         'work_hours' => $details['work_hours'] ?? null,
                         'price' => $details['price'] ?? null,
+                        'processing_time' => $details['processing_time'] ?? null,
+                        'office_location' => $details['office_location'] ?? null,
+                        'required_documents' => $details['required_documents'] ?? null,
+                        'steps' => $details['steps'] ?? null,
+                        'conditions' => $details['conditions'] ?? null,
+                        'notes' => $details['notes'] ?? null,
+                        'requires_appointment' => $details['requires_appointment'] ?? false,
+                        'appointment_phone' => $details['appointment_phone'] ?? null,
+                        'doctor_specialist' => $details['doctor_specialist'] ?? null,
+                        'hospital_stay_duration' => $details['hospital_stay_duration'] ?? null,
+                        'emergency_notes' => $details['emergency_notes'] ?? null,
                     ];
                 }
             }
@@ -434,26 +512,26 @@ class AdminController extends Controller
         return redirect()->route('admin.services')->with('success', 'تم تحديث الخدمة بنجاح');
     }
 
- public function destroyService($id)
-{
-    $service = OfferService::findOrFail($id);
+    public function destroyService($id)
+    {
+        $service = OfferService::findOrFail($id);
 
-    // حذف الصور المتعددة
-    if ($service->images) {
-        foreach ($service->images as $image) {
-            Storage::disk('public')->delete($image);
+        // حذف الصور المتعددة
+        if ($service->images) {
+            foreach ($service->images as $image) {
+                Storage::disk('public')->delete($image);
+            }
         }
+
+        // حذف أيقونة الخدمة
+        if ($service->icon_image) {
+            Storage::disk('public')->delete($service->icon_image);
+        }
+
+        $service->delete();
+
+        return redirect()->route('admin.services')->with('success', 'تم حذف الخدمة بنجاح');
     }
-
-    // حذف أيقونة الخدمة
-    if ($service->icon_image) {
-        Storage::disk('public')->delete($service->icon_image);
-    }
-
-    $service->delete();
-
-    return redirect()->route('admin.services')->with('success', 'تم حذف الخدمة بنجاح');
-}
     // ==================== إدارة المستخدمين ====================
     public function users(Request $request)
     {
