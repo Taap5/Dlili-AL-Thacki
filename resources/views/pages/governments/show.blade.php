@@ -1652,9 +1652,7 @@
         }
 
         /* إزالة transform من جميع العناصر */
-        * {
-            transform: none !important;
-        }
+        
 
         /* استثناء فقط للعناصر التي تحتاج transform (مثل الأكورديون) */
         .accordion-btn:not(.collapsed) .accordion-arrow {
