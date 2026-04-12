@@ -216,49 +216,111 @@
                 @if ($government->description)
                     @php
                         $fullDescription = $government->description;
-                        $shortDescription = Str::limit($fullDescription, 120, '...');
-                        $isLong = Str::length($fullDescription) > 120;
+                        $isLong = Str::length(strip_tags($fullDescription)) > 120;
+
+                        // قص النص مع تجاهل HTML
+                        $shortDescription = Str::limit(strip_tags($fullDescription), 120, '...');
                     @endphp
                     <div class="government-description mt-4 p-4"
                         style="background: linear-gradient(135deg, #f0f4ff, #ffffff); border-right: 4px solid #2f3e9e; border-radius: 16px;">
                         <i class="fas fa-quote-right text-primary me-2 opacity-50"></i>
 
-                        <!-- الوصف المختصر -->
-                        <div class="short-description" id="shortDesc">
-                            <p class="mb-0" style="color: #4a5568; white-space: pre-wrap;">{{ $shortDescription }}</p>
+                        <div class="expandable-text">
+                            <input type="checkbox" id="expandCheckbox" class="expand-checkbox" style="display: none;">
+                            <div class="expandable-content">
+                                <div class="short-text">
+                                    {!! nl2br(e($shortDescription)) !!}
+                                </div>
+                                <div class="full-text" style="display: none;">
+                                    @if (Str::contains($fullDescription, '<'))
+                                        {!! $fullDescription !!}
+                                    @else
+                                        {!! nl2br(e($fullDescription)) !!}
+                                    @endif
+                                </div>
+                            </div>
                             @if ($isLong)
-                                <button class="read-more-btn" onclick="openFullDescription()">
-                                    <i class="fas fa-chevron-down"></i> عرض المزيد
-                                </button>
+                                <label for="expandCheckbox" class="expand-label">
+                                    <span class="expand-more">عرض المزيد <i class="fas fa-chevron-down"></i></span>
+                                    <span class="expand-less">عرض أقل <i class="fas fa-chevron-up"></i></span>
+                                </label>
                             @endif
                         </div>
                     </div>
 
-                    <!-- مودال عرض الوصف الكامل -->
-                    <!-- مودال عرض الوصف الكامل -->
-                    <div class="modal fade description-modal" id="fullDescriptionModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="fas fa-align-right me-2"></i>
-                                        وصف {{ $government->name }}
-                                    </h5>
-                                    <button type="button" class="btn-close" onclick="closeFullDescriptionModal()"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p style="white-space: pre-wrap; line-height: 1.8;">{{ $fullDescription }}</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                        onclick="closeFullDescriptionModal()">إغلاق</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endif
+                    <style>
+                        .expand-checkbox:checked~.expandable-content .short-text {
+                            display: none;
+                        }
 
+                        .expand-checkbox:checked~.expandable-content .full-text {
+                            display: block !important;
+                            margin-top: 12px;
+                        }
+
+                        .expand-checkbox:checked~.expand-label .expand-more {
+                            display: none;
+                        }
+
+                        .expand-checkbox:checked~.expand-label .expand-less {
+                            display: inline-flex;
+                        }
+
+                        .expand-label .expand-less {
+                            display: none;
+                        }
+
+                        .expand-label {
+                            cursor: pointer;
+                            color: #2f3e9e;
+                            font-size: 12px;
+                            font-weight: 500;
+                            margin-top: 8px;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 5px;
+                        }
+
+                        .expand-label:hover {
+                            color: #5a6fc9;
+                            text-decoration: underline;
+                        }
+
+                        .expand-label i {
+                            font-size: 11px;
+                        }
+
+                        .short-text,
+                        .full-text {
+                            line-height: 1.8;
+                            color: #4a5568;
+                        }
+
+                        .full-text ul,
+                        .full-text ol {
+                            padding-right: 20px;
+                            margin: 10px 0;
+                        }
+
+                        .full-text li {
+                            margin-bottom: 5px;
+                        }
+
+                        .full-text p {
+                            margin-bottom: 12px;
+                        }
+
+                        .full-text h1,
+                        .full-text h2,
+                        .full-text h3,
+                        .full-text h4,
+                        .full-text h5,
+                        .full-text h6 {
+                            margin: 15px 0 10px 0;
+                            color: #1a2c3e;
+                        }
+                    </style>
+                @endif
 
                 @if (count($images))
                     <div class="gallery-section mt-4">
@@ -776,11 +838,12 @@
 
 @push('scripts')
     <style>
-/* خلفية بسيطة متناسقة بدون كرات متحركة */
-body {
-    background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
-    min-height: 100vh;
-}
+        /* خلفية بسيطة متناسقة بدون كرات متحركة */
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+            min-height: 100vh;
+        }
+
         :root {
             --primary: #1b2463;
             --primary-light: #414970;
@@ -1839,6 +1902,69 @@ body {
             background: #f0f0f0;
             color: #9e9e9e;
         }
+
+        .modal.fade .modal-dialog {
+            transition: none;
+        }
+
+        /* إصلاح مشكلة وميض المودال */
+        .modal-backdrop {
+            z-index: 1040 !important;
+        }
+
+        .modal {
+            z-index: 1050 !important;
+        }
+
+        /* منع التداخل مع العناصر الأخرى */
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 0 !important;
+        }
+
+        /* تنسيق محتوى المودال */
+        .description-modal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 24px;
+            line-height: 1.8;
+            color: #4a5568;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .description-modal .modal-header {
+            background: linear-gradient(135deg, #2f3e9e, #5a6fc9);
+            color: white;
+            padding: 16px 24px;
+            border: none;
+        }
+
+        .description-modal .modal-header .modal-title {
+            color: white;
+            font-weight: 600;
+        }
+
+        .description-modal .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+        }
+
+        .description-modal .modal-header .btn-close:hover {
+            opacity: 1;
+        }
+
+        .description-modal .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            .description-modal .modal-body {
+                padding: 16px;
+                font-size: 14px;
+            }
+        }
     </style>
 
     <script>
@@ -2383,68 +2509,29 @@ body {
                 alert('حدث خطأ في عرض تفاصيل الخدمة');
             }
         }
-        // فتح نافذة عرض الوصف الكامل
-        // فتح نافذة عرض الوصف الكامل - نسخة محسنة
-        function openFullDescription() {
-            const modalElement = document.getElementById('fullDescriptionModal');
-
-            if (!modalElement) {
-                console.error('Modal element not found');
-                return;
-            }
-
-            // تأكد من إزالة أي modal-open سابقة
-            document.body.classList.remove('modal-open');
-
-            // إزالة أي backdrop موجود
-            const oldBackdrop = document.querySelector('.modal-backdrop');
-            if (oldBackdrop) oldBackdrop.remove();
-
-            // عرض المودال
-            modalElement.style.display = 'flex';
-            modalElement.classList.add('show');
-            document.body.classList.add('modal-open');
-
-            // إضافة backdrop
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            document.body.appendChild(backdrop);
-
-            // منع تمرير الخلفية
-            document.body.style.overflow = 'hidden';
-        }
-
-        // إغلاق المودال
-        function closeFullDescriptionModal() {
-            const modalElement = document.getElementById('fullDescriptionModal');
-            if (modalElement) {
-                modalElement.style.display = 'none';
-                modalElement.classList.remove('show');
-            }
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) backdrop.remove();
-        }
-
-        // إغلاق عند الضغط على ESC
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                const modal = document.getElementById('fullDescriptionModal');
-                if (modal && modal.classList.contains('show')) {
-                    closeFullDescriptionModal();
-                }
-            }
+        // إصلاح مشكلة وميض المودال
+        document.addEventListener('DOMContentLoaded', function() {
+            // التأكد من تهيئة المودالات بشكل صحيح
+            var modals = document.querySelectorAll('.modal');
+            modals.forEach(function(modal) {
+                modal.addEventListener('show.bs.modal', function() {
+                    document.body.style.overflow = 'hidden';
+                });
+                modal.addEventListener('hidden.bs.modal', function() {
+                    document.body.style.overflow = '';
+                });
+            });
         });
-
-        // إغلاق عند الضغط على الخلفية
-        document.getElementById('fullDescriptionModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeFullDescriptionModal();
-            }
-        });
+        // بديل لفتح المودال بدون استخدام data-bs-toggle
+        function showFullDescription() {
+            var myModal = new bootstrap.Modal(document.getElementById('fullDescriptionModal'));
+            myModal.show();
+        }
+        // منع الوميض مع الحفاظ على الخريطة
     </script>
-
+    <script>
+        window.ORS_API_KEY = "{{ env('ORS_API_KEY') }}";
+    </script>
     <script src="{{ asset('js/map.js') }}"></script>
     <script src="{{ asset('js/favorite.js') }}"></script>
 @endpush
