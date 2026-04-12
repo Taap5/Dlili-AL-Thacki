@@ -20,10 +20,17 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# تجاهل قاعدة البيانات أثناء تثبيت composer
-RUN composer install --optimize-autoloader --no-dev --ignore-platform-req=ext-pdo_sqlite
+# تعيين متغير بيئة مؤقت لتجنب الاتصال بقاعدة البيانات
+ENV DB_CONNECTION=sqlite
+ENV DB_DATABASE=/tmp/dummy.sqlite
 
-# إنشاء مجلد storage وتصحيح الصلاحيات
+# إنشاء ملف قاعدة بيانات مؤقت
+RUN touch /tmp/dummy.sqlite
+
+# تثبيت dependencies
+RUN composer install --optimize-autoloader --no-dev
+
+# إنشاء مجلدات storage وتصحيح الصلاحيات
 RUN mkdir -p storage/framework/sessions \
     && mkdir -p storage/framework/views \
     && mkdir -p storage/framework/cache \
@@ -32,9 +39,10 @@ RUN mkdir -p storage/framework/sessions \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# تشغيل أوامر Laravel بعد تعيين متغيرات البيئة
+# تشغيل أوامر Laravel مع تجاهل الأخطاء
 RUN php artisan config:clear || true
 RUN php artisan cache:clear || true
+RUN php artisan package:discover --ansi || true
 
 EXPOSE 80
 
