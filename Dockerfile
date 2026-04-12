@@ -8,8 +8,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
+    libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql mysqli zip
+    && docker-php-ext-install gd pdo pdo_pgsql pgsql zip
 
 RUN a2enmod rewrite
 
@@ -19,15 +20,21 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN composer install --optimize-autoloader --no-dev
+# تجاهل قاعدة البيانات أثناء تثبيت composer
+RUN composer install --optimize-autoloader --no-dev --ignore-platform-req=ext-pdo_sqlite
 
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+# إنشاء مجلد storage وتصحيح الصلاحيات
+RUN mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/framework/cache \
+    && mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
+# تشغيل أوامر Laravel بعد تعيين متغيرات البيئة
+RUN php artisan config:clear || true
+RUN php artisan cache:clear || true
 
 EXPOSE 80
 
