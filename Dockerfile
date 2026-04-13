@@ -24,10 +24,12 @@ WORKDIR /var/www/html
 COPY . .
 
 # ==============================================
-# إنشاء قاعدة بيانات SQLite مؤقتة (لحل مشكلة key:generate)
+# إنشاء ملف .env مؤقت (لحل مشكلة key:generate)
 # ==============================================
-RUN touch database/database.sqlite && \
-    chmod 666 database/database.sqlite
+RUN touch .env && chmod 666 .env
+
+# إنشاء قاعدة بيانات SQLite مؤقتة
+RUN touch database/database.sqlite && chmod 666 database/database.sqlite
 
 # تثبيت dependencies
 RUN composer install --no-dev --optimize-autoloader
@@ -43,11 +45,11 @@ RUN mkdir -p storage/framework/sessions \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# توليد APP_KEY (الآن سيعمل لأن SQLite موجود)
+# توليد APP_KEY (الآن سيعمل لأن .env و SQLite موجودان)
 RUN php artisan key:generate --force --no-interaction
 
-# حذف قاعدة البيانات المؤقتة (لن نحتاجها بعد الآن)
-RUN rm database/database.sqlite
+# حذف الملفات المؤقتة
+RUN rm .env database/database.sqlite
 
 # تشغيل migrations (لإنشاء جميع الجداول في PostgreSQL)
 RUN php artisan migrate --force --no-interaction || true
