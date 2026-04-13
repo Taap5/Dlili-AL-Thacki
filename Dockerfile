@@ -23,12 +23,16 @@ WORKDIR /var/www/html
 
 COPY . .
 
+# ==============================================
+# إنشاء قاعدة بيانات SQLite مؤقتة (لحل مشكلة key:generate)
+# ==============================================
+RUN touch database/database.sqlite && \
+    chmod 666 database/database.sqlite
+
 # تثبيت dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# ==============================================
-# إصلاح مشكلة الصلاحيات (الأهم)
-# ==============================================
+# إصلاح صلاحيات المجلدات
 RUN mkdir -p storage/framework/sessions \
     && mkdir -p storage/framework/views \
     && mkdir -p storage/framework/cache \
@@ -39,10 +43,13 @@ RUN mkdir -p storage/framework/sessions \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# توليد APP_KEY
+# توليد APP_KEY (الآن سيعمل لأن SQLite موجود)
 RUN php artisan key:generate --force --no-interaction
 
-# تشغيل migrations (لإنشاء جميع الجداول)
+# حذف قاعدة البيانات المؤقتة (لن نحتاجها بعد الآن)
+RUN rm database/database.sqlite
+
+# تشغيل migrations (لإنشاء جميع الجداول في PostgreSQL)
 RUN php artisan migrate --force --no-interaction || true
 
 # Apache root إلى public
