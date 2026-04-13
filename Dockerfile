@@ -35,7 +35,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 
 # Apache root إلى public
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
-APP_KEY=base64:sfUB5QoC2VTyMRGBwyEB//sZTmVJjdRJmC0h9ruddqw=
+
 EXPOSE 80
 
 CMD ["apache2-foreground"]
