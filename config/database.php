@@ -42,6 +42,18 @@ return [
             'synchronous' => null,
             'transaction_mode' => 'DEFERRED',
         ],
+        'pgsql_render' => [
+            'driver' => 'pgsql',
+            'host' => 'dpg-d7e39b3eo5us73811kk0-a',
+            'port' => '5432',
+            'database' => 'dlili_db',
+            'username' => 'dlili_db_user',
+            'password' => 'H2pwSsLZ4bfBvvdnHO8sLyw8nvYLoqoB',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ],
 
         'mysql' => [
             'driver' => 'mysql',
@@ -148,7 +160,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')) . '-database-'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
