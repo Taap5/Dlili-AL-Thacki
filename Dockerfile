@@ -35,7 +35,7 @@ RUN mkdir -p storage/framework/sessions \
 # تعديل DocumentRoot إلى مجلد public
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
-
+RUN php artisan migrate --force || true
 EXPOSE 80
 
 CMD ["apache2-foreground"]

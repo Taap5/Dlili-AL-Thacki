@@ -22,15 +22,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::share('categories', GovernmentCategory::all());
-
-
-
+        if (\Illuminate\Support\Facades\Schema::hasTable('government_categories')) {
+            View::share('categories', GovernmentCategory::all());
+        } else {
+            View::share('categories', collect());
+        }
 
         Paginator::useBootstrapFive();
         Paginator::useBootstrapFour();
 
-        // أو تخصيص التصميم
         Paginator::defaultView('vendor.pagination.bootstrap-5');
         Paginator::defaultSimpleView('vendor.pagination.simple-bootstrap-5');
     }
