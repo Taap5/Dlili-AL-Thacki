@@ -26,20 +26,27 @@ COPY . .
 # تثبيت dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# إعداد Laravel storage بشكل صحيح
-RUN mkdir -p storage/framework/{sessions,views,cache} \
+# ==============================================
+# إصلاح مشكلة الصلاحيات (الأهم)
+# ==============================================
+RUN mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/framework/cache \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
+
+# توليد APP_KEY
+RUN php artisan key:generate --force --no-interaction
+
+# تشغيل migrations (لإنشاء جميع الجداول)
+RUN php artisan migrate --force --no-interaction || true
 
 # Apache root إلى public
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
-
-# ===========================================
-# 👇 تشغيل migrations (السطر المهم)
-# ===========================================
-RUN php artisan migrate --force --no-interaction || true
 
 EXPOSE 80
 
