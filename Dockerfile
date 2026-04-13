@@ -20,13 +20,6 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# تعيين متغير بيئة مؤقت لتجنب الاتصال بقاعدة البيانات
-ENV DB_CONNECTION=sqlite
-ENV DB_DATABASE=/tmp/dummy.sqlite
-
-# إنشاء ملف قاعدة بيانات مؤقت
-RUN touch /tmp/dummy.sqlite
-
 # تثبيت dependencies
 RUN composer install --optimize-autoloader --no-dev
 
@@ -39,14 +32,9 @@ RUN mkdir -p storage/framework/sessions \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# تشغيل أوامر Laravel مع تجاهل الأخطاء
-
-RUN php artisan config:clear || true
-RUN php artisan cache:clear || true
-RUN php artisan package:discover --ansi || true
-# تعديل DocumentRoot إلى مجلد public الخاص بـ Laravel
+# تعديل DocumentRoot إلى مجلد public
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
-RUN php artisan migrate --force || true
+
 EXPOSE 80
 
 CMD ["apache2-foreground"]
