@@ -35,6 +35,21 @@ RUN mkdir -p storage/framework/sessions \
 # تعديل DocumentRoot إلى مجلد public
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
+# ======================================================
+# 🚀 الأوامر السحرية لإنهاء مشكلة 500
+# ======================================================
+
+# 1. توليد APP_KEY تلقائياً (لن يعمل إذا كان موجوداً في .env)
+RUN php artisan key:generate --force --no-interaction
+
+# 2. تخزين الإعدادات في ذاكرة التخزين المؤقتة
+RUN php artisan config:cache
+
+# 3. تشغيل migrations لإنشاء الجداول في قاعدة البيانات
+RUN php artisan migrate --force --no-interaction
+
+# ======================================================
+
 EXPOSE 80
 
 CMD ["apache2-foreground"]
