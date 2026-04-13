@@ -43,8 +43,16 @@ RUN mkdir -p storage/framework/sessions \
     && chmod -R 777 storage \
     && chmod -R 777 bootstrap/cache
 
+# ==============================================
+# إنشاء ملف .env مؤقت لـ key:generate
+# ==============================================
+RUN touch .env && echo "APP_ENV=production" >> .env
+
 # توليد APP_KEY
 RUN php artisan key:generate --force --no-interaction
+
+# حذف .env المؤقت (لن نحتاجه بعد الآن)
+RUN rm .env
 
 # تشغيل migrations
 RUN php artisan migrate --force --no-interaction
