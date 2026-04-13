@@ -21,12 +21,20 @@ WORKDIR /var/www/html
 
 COPY . .
 
+# ==============================================
+# متغيرات قاعدة البيانات
+# ==============================================
+ENV DB_CONNECTION=pgsql
+ENV DB_HOST=dpg-d7e39b3eo5us73811kk0-a
+ENV DB_PORT=5432
+ENV DB_DATABASE=dlili_db
+ENV DB_USERNAME=dlili_db_user
+ENV DB_PASSWORD=H2pwSsLZ4bfBvvdnHO8sLyw8nvYLoqoB
+
 # تثبيت dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# ==============================================
-# إصلاح كامل للصلاحيات (بأقصى صلاحية)
-# ==============================================
+# إصلاح صلاحيات المجلدات
 RUN mkdir -p storage/framework/sessions \
     && mkdir -p storage/framework/views \
     && mkdir -p storage/framework/cache \
@@ -35,19 +43,10 @@ RUN mkdir -p storage/framework/sessions \
     && chmod -R 777 storage \
     && chmod -R 777 bootstrap/cache
 
-# تجهيز قاعدة البيانات المؤقتة لـ key:generate
-RUN touch database/database.sqlite && chmod 666 database/database.sqlite
-
-# إنشاء ملف .env مؤقت لـ key:generate
-RUN touch .env
-
-# توليد APP_KEY (سيكتبه في .env المؤقت)
+# توليد APP_KEY
 RUN php artisan key:generate --force --no-interaction
 
-# تنظيف الملفات المؤقتة (لن نحتاجها بعد الآن)
-RUN rm .env database/database.sqlite
-
-# تشغيل migrations على PostgreSQL
+# تشغيل migrations
 RUN php artisan migrate --force --no-interaction
 
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
