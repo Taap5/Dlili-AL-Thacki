@@ -40,6 +40,7 @@ RUN mkdir -p storage/framework/sessions \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
 # تشغيل أوامر Laravel مع تجاهل الأخطاء
+
 RUN php artisan config:clear || true
 RUN php artisan cache:clear || true
 RUN php artisan package:discover --ansi || true
