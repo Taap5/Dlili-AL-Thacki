@@ -46,6 +46,7 @@ RUN php artisan cache:clear || true
 RUN php artisan package:discover --ansi || true
 # تعديل DocumentRoot إلى مجلد public الخاص بـ Laravel
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+RUN php artisan migrate --force || true
 EXPOSE 80
 
 CMD ["apache2-foreground"]
