@@ -22,7 +22,7 @@
     <div class="main-bar">
         <div class="logo-area">
             <a href="{{ url('/') }}" class="logo">
-                @if (file_exists(public_path('images/logo.png')))
+                @if (file_exists(public_path('images/logo.png')) || file_exists($_SERVER['DOCUMENT_ROOT'] . '/images/logo.png'))
                     <img src="{{ asset('images/logo.png') }}" alt="Dalili Logo" class="logo-img">
                 @else
                     <div class="logo-placeholder">
@@ -86,7 +86,7 @@
 
     /* ===== الشريط العلوي ===== */
     .top-bar {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #171e3a 100%);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #171e3a 100%);
         color: #fff;
         padding: 8px 20px;
         display: flex;
@@ -268,7 +268,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-           background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #171e3a 100%);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #171e3a 100%);
         border: none;
         padding: 6px 16px 6px 20px;
         border-radius: 40px;
