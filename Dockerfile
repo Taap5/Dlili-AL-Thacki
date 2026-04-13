@@ -69,5 +69,6 @@ RUN php artisan migrate --force --no-interaction
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 80
-
+# إعادة توجيه جميع طلبات الأصول إلى مجلد public
+RUN echo '<IfModule mod_rewrite.c>\n    RewriteEngine On\n    RewriteCond %{REQUEST_URI} !^/public/\n    RewriteRule ^(build/.*)$ /public/$1 [L,NC]\n</IfModule>' >> /var/www/html/.htaccess
 CMD ["apache2-foreground"]
