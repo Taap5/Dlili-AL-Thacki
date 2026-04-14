@@ -29,14 +29,13 @@ RUN npm install && npm run build
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# ==============================================
-# تحسينات الأداء (تتجاهل الأخطاء أثناء البناء)
-# ==============================================
+# إنشاء الرابط الرمزي يدوياً (بدون artisan)
+RUN ln -sf /var/www/html/storage/app/public /var/www/html/public/storage
+
+# تحسينات الأداء (تتجاهل الأخطاء)
 RUN php artisan config:cache || true
 RUN php artisan route:cache || true
 RUN php artisan view:cache || true
-RUN php artisan storage:link || true
-# ==============================================
 
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
