@@ -23,7 +23,7 @@
         <div class="logo-area">
             <a href="{{ url('/') }}" class="logo">
                 @if (file_exists(public_path('images/logo.png')) || file_exists($_SERVER['DOCUMENT_ROOT'] . '/images/logo.png'))
-                    <img src="{{ asset('images/logo.png') }}" alt="Dalili Logo" class="logo-img">
+                    <img src="{{ asset('images/logo.png') }}"  loading="lazy" alt="Dalili Logo" class="logo-img">
                 @else
                     <div class="logo-placeholder">
                         <i class="fas fa-map-marked-alt"></i>
@@ -51,7 +51,7 @@
             @else
                 <button class="user-menu-btn" id="sidebarToggle">
                     @if (Auth::user()->profile_photo)
-                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" class="rounded-circle"
+                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" class="rounded-circle" loading="lazy"
                             style="width: 32px; height: 32px; object-fit: cover;">
                     @else
                         <span class="user-icon-placeholder">

@@ -334,8 +334,9 @@
                                 @foreach ($images as $index => $img)
                                     <div class="gallery-item">
                                         <img src="{{ asset('storage/' . $img) }}" class="rounded-3 shadow-sm gov-thumb"
-                                            data-full-img="{{ asset('storage/' . $img) }}" data-bs-toggle="modal"
-                                            data-bs-target="#imagePreviewModal" alt="صورة {{ $government->name }}">
+                                            loading="lazy" data-full-img="{{ asset('storage/' . $img) }}"
+                                            data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
+                                            alt="صورة {{ $government->name }}">
                                     </div>
                                 @endforeach
                             </div>
@@ -536,7 +537,8 @@
                                                             @if ($subService->icon_image)
                                                                 <img src="{{ asset('storage/' . $subService->icon_image) }}"
                                                                     alt="{{ $subService->display_name }}"
-                                                                    style="width: 32px; height: 32px; object-fit: contain;">
+                                                                    style="width: 32px; height: 32px; object-fit: contain;"
+                                                                    loading="lazy">
                                                             @else
                                                                 <i class="fas fa-ambulance"></i>
                                                             @endif
@@ -598,7 +600,8 @@
                                                                 @if ($service->icon_image)
                                                                     <img src="{{ asset('storage/' . $service->icon_image) }}"
                                                                         alt="{{ $service->name }}"
-                                                                        style="width: 32px; height: 32px; object-fit: contain;">
+                                                                        style="width: 32px; height: 32px; object-fit: contain;"
+                                                                        loading="lazy">
                                                                 @else
                                                                     <i class="fas fa-ambulance"></i>
                                                                 @endif
@@ -803,7 +806,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body-custom">
-                    <img id="previewImage" src="" class="img-fluid rounded-4"
+                    <img id="previewImage" src="" class="img-fluid rounded-4" loading="lazy"
                         style="max-height: 80vh; object-fit: contain;">
                 </div>
             </div>
@@ -2487,7 +2490,7 @@
                 if (modalIcon) {
                     if (service.icon_image && service.icon_image !== 'null' && service.icon_image !== '') {
                         modalIcon.innerHTML =
-                            `<img src="/storage/${service.icon_image}" style="width: 60px; height: 60px; object-fit: contain;">`;
+                            `<img src="/storage/${service.icon_image}" style="width: 60px; height: 60px; object-fit: contain;" loading="lazy">`;
                     } else {
                         modalIcon.innerHTML = `<i class="fas fa-ambulance fa-3x"></i>`;
                     }

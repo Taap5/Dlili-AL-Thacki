@@ -479,11 +479,11 @@
                     @endphp
                     <div class="government-card">
                         @if($firstImage)
-                            <img src="{{ asset('storage/' . $firstImage) }}"
-                                 class="card-img-top"
+                            <img src="{{ asset('storage/' . $firstImage) }}" 
+                                 class="card-img-top" loading="lazy"
                                  alt="{{ $gov->name }}">
                         @else
-                            <div class="card-img-placeholder">
+                            <div class="card-img-placeholder" loading="lazy">
                                 <i class="fas fa-building"></i>
                             </div>
                         @endif

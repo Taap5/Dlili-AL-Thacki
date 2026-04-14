@@ -585,7 +585,7 @@
                                 <div class="result-content">
                                     <!-- Image -->
                                     @if($isGovernment && $firstImage)
-                                        <img src="{{ asset('storage/' . $firstImage) }}" class="result-image" alt="{{ $result['name'] }}">
+                                        <img src="{{ asset('storage/' . $firstImage) }}" loading="lazy" class="result-image" alt="{{ $result['name'] }}">
                                     @else
                                         <div class="result-image-placeholder">
                                             <i class="fas {{ $isGovernment ? 'fa-building' : 'fa-concierge-bell' }}"></i>

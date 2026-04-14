@@ -9,7 +9,7 @@
             <div class="user-info">
                 @if(Auth::user()->profile_photo)
                     <div class="user-avatar">
-                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}"
+                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" loading="lazy"
                              alt="{{ Auth::user()->user_name }}">
                     </div>
                 @else

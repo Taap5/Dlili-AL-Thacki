@@ -535,7 +535,7 @@
                 <div class="col-md-8">
                     <div class="service-icon-large">
                         @if($service->icon_image)
-                            <img src="{{ asset('storage/' . $service->icon_image) }}" alt="{{ $service->name }}" style="width: 70px; height: 70px; object-fit: contain;">
+                            <img src="{{ asset('storage/' . $service->icon_image) }}" loading="lazy" alt="{{ $service->name }}" style="width: 70px; height: 70px; object-fit: contain;">
                         @else
                             <i class="fas fa-concierge-bell"></i>
                         @endif
@@ -600,7 +600,7 @@
                 <div class="gallery-scroll">
                     @foreach($images as $index => $img)
                         <div class="gallery-item" onclick="openGallery({{ $index }})">
-                            <img src="{{ asset('storage/' . $img) }}" alt="صورة الخدمة">
+                            <img src="{{ asset('storage/' . $img) }}" loading="lazy" alt="صورة الخدمة">
                             <div class="gallery-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;">
                                 <i class="fas fa-search-plus" style="color: white;"></i>
                             </div>
@@ -627,7 +627,7 @@
                     @endphp
                     <div class="government-card">
                         @if($firstImage)
-                            <img src="{{ asset('storage/' . $firstImage) }}" class="card-img" alt="{{ $government->name }}">
+                            <img src="{{ asset('storage/' . $firstImage) }}" loading="lazy" class="card-img" alt="{{ $government->name }}">
                         @else
                             <div class="card-img-placeholder">
                                 <i class="fas fa-building"></i>
@@ -762,7 +762,7 @@
                     <a href="{{ route('services.show', $related->id) }}" class="related-card">
                         <div class="related-icon">
                             @if($related->icon_image)
-                                <img src="{{ asset('storage/' . $related->icon_image) }}" style="width: 30px; height: 30px; object-fit: contain;">
+                                <img src="{{ asset('storage/' . $related->icon_image) }}"  loading="lazy" style="width: 30px; height: 30px; object-fit: contain;">
                             @else
                                 <i class="fas fa-concierge-bell"></i>
                             @endif

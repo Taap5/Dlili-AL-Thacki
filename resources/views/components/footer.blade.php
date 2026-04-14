@@ -4,7 +4,7 @@
         <div class="footer-main">
             <div class="footer-brand">
                 <div class="footer-logo">
-                    <img src="{{ asset('images/logo.png') }}" alt="دليلي الذكي" class="logo-img" onerror="this.src='https://placehold.co/50x50/ffffff/2f3e9e?text=D'">
+                    <img src="{{ asset('images/logo.png') }}" loading="lazy" alt="دليلي الذكي" class="logo-img" onerror="this.src='https://placehold.co/50x50/ffffff/2f3e9e?text=D'">
                     <h3>دليلي <span>الذكي</span></h3>
                 </div>
                 <p class="brand-description">منصة رائدة تجمع جميع الخدمات الحكومية في مكان واحد، لتوفير الوقت والجهد على المواطنين والمقيمين.</p>

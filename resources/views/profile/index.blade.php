@@ -467,7 +467,7 @@
         <div class="profile-header">
             <div class="profile-avatar">
                 @if(Auth::user()->profile_photo)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="{{ Auth::user()->user_name }}">
+                    <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" loading="lazy" alt="{{ Auth::user()->user_name }}">
                 @else
                     <div class="profile-avatar-placeholder">
                         <i class="fas fa-user"></i>

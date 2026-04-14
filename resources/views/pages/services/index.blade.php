@@ -617,7 +617,7 @@
                         <div class="card-body">
                             <div class="service-icon">
                                 @if($service->icon_image)
-                                    <img src="{{ asset('storage/' . $service->icon_image) }}" alt="{{ $service->name }}">
+                                    <img src="{{ asset('storage/' . $service->icon_image) }}" loading="lazy" alt="{{ $service->name }}">
                                 @else
                                     <i class="fas fa-ambulance"></i>
                                 @endif
