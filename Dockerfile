@@ -26,10 +26,13 @@ RUN composer install --no-dev --optimize-autoloader
 
 RUN npm install && npm run build
 
+# ==============================================
+# إصلاح صلاحيات storage (مهم جداً)
+# ==============================================
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# إنشاء الرابط الرمزي يدوياً (بدون artisan)
+# إنشاء الرابط الرمزي يدوياً
 RUN ln -sf /var/www/html/storage/app/public /var/www/html/public/storage
 
 # تحسينات الأداء (تتجاهل الأخطاء)
