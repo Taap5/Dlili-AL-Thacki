@@ -1,18 +1,20 @@
 FROM php:8.2-apache
 
-RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    unzip \
-    git \
-    curl \
-    libpq-dev \
-    nodejs \
-    npm \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_pgsql pgsql zip
+# تحديث المستودعات وتثبيت المتطلبات مع إضافة خيار تجنب الأخطاء المؤقتة
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    unzip \
+    git \
+    curl \
+    libpq-dev \
+    nodejs \
+    npm \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_pgsql pgsql zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN a2enmod rewrite
 
@@ -26,20 +28,14 @@ RUN composer install --no-dev --optimize-autoloader
 
 RUN npm install && npm run build
 
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# إعطاء الصلاحيات لكامل المجلد لضمان عدم حدوث خطأ Permission Denied مجدداً
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# إنشاء الرابط الرمزي يدوياً (بدون artisan)
-RUN ln -sf /var/www/html/storage/app/public /var/www/html/public/storage
-
-# تحسينات الأداء (تتجاهل الأخطاء)
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
-
+# توجيه الأباتشي للمجلد العام
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 80
 
-CMD ["apache2-foreground"]
-
+# تنفيذ الرابط الرمزي عند التشغيل الفعلي لضمان ظهور الصور
+CMD php artisan storage:link --force && apache2-foreground
