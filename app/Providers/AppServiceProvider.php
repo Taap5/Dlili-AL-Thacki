@@ -17,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // إجبار المتصفح على استخدام روابط آمنة عند الرفع على ريندر
         if (config('app.env') !== 'local') {
-            URL::forceScheme('https');
+            \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
         view()->share(
