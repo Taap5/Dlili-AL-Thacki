@@ -27,10 +27,16 @@ RUN composer install --no-dev --optimize-autoloader
 RUN npm install && npm run build
 
 # ==============================================
-# إصلاح صلاحيات storage (مهم جداً)
+# إصلاح صلاحيات storage (الحل النهائي)
 # ==============================================
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
 # إنشاء الرابط الرمزي يدوياً
 RUN ln -sf /var/www/html/storage/app/public /var/www/html/public/storage
