@@ -2532,6 +2532,6 @@
     <script>
         window.ORS_API_KEY = "{{ env('ORS_API_KEY') }}";
     </script>
-    <script src="{{ app()->environment('local') ? asset('js/map.js') : secure_asset('js/map.js') }}"></script>
+   <script src="{{ app()->environment('local') ? asset('js/map.js') : secure_asset('js/map.js') }}"></script>
     <script src="{{ app()->environment('local') ? asset('js/favorite.js') : secure_asset('js/favorite.js') }}"></script>
 @endpush
