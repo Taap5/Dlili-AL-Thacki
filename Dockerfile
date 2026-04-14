@@ -29,12 +29,14 @@ RUN npm install && npm run build
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-RUN php artisan storage:link
-
-# تحسينات الأداء
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
+# ==============================================
+# تحسينات الأداء (تتجاهل الأخطاء أثناء البناء)
+# ==============================================
+RUN php artisan config:cache || true
+RUN php artisan route:cache || true
+RUN php artisan view:cache || true
+RUN php artisan storage:link || true
+# ==============================================
 
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
