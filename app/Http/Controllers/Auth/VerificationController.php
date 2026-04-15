@@ -7,13 +7,11 @@ use App\Models\EmailVerification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http; // إضافة كلاس HTTP لاستخدام الـ API
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB; // إضافة DB للتعامل مع الـ Sequence
 
 class VerificationController extends Controller
 {
-    /**
-     * وظيفة مساعدة لإرسال الإيميل عبر Brevo API
-     */
     private function sendEmailViaBrevo($email, $code, $userName = 'User')
     {
         try {
@@ -24,7 +22,7 @@ class VerificationController extends Controller
             ])->post('https://api.brevo.com/v3/smtp/email', [
                 'sender' => [
                     'name' => 'دليلي الذكي',
-                    'email' => 'dlilialthacki@gmail.com' // الإيميل الذي قمت بتوثيقه في Brevo
+                    'email' => 'dlilialthacki@gmail.com'
                 ],
                 'to' => [
                     ['email' => $email, 'name' => $userName]
@@ -40,7 +38,6 @@ class VerificationController extends Controller
         }
     }
 
-    // إرسال رمز التحقق
     public function sendCode(Request $request)
     {
         $request->validate([
@@ -53,22 +50,18 @@ class VerificationController extends Controller
         $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $expiresAt = now()->addMinutes(10);
 
-        // حفظ الرمز في قاعدة البيانات
         EmailVerification::updateOrCreate(
             ['email' => $request->email],
             ['code' => $code, 'expires_at' => $expiresAt]
         );
 
-        // إرسال البريد عبر الـ API الجديد
         $this->sendEmailViaBrevo($request->email, $code, $request->user_name);
 
-        // تخزين بيانات المستخدم المؤقتة في الجلسة
         session(['temp_user' => $request->only('user_name', 'email', 'phone', 'password')]);
 
         return redirect()->route('verify.code.form')->with('success', 'تم إرسال رمز التحقق إلى بريدك الإلكتروني');
     }
 
-    // عرض صفحة إدخال الرمز
     public function showCodeForm()
     {
         if (!session()->has('temp_user')) {
@@ -77,7 +70,6 @@ class VerificationController extends Controller
         return view('auth.verify-code');
     }
 
-    // التحقق من الرمز
     public function verifyCode(Request $request)
     {
         $request->validate([
@@ -103,27 +95,37 @@ class VerificationController extends Controller
             return redirect()->route('register')->with('error', 'انتهت صلاحية الرمز، يرجى إعادة التسجيل');
         }
 
-        // إنشاء المستخدم
+        // --- بداية الحل الجذري لمشكلة الـ ID في PostgreSQL ---
+
+        // 1. حساب الـ ID التالي يدوياً لتجنب التعارض (Unique Violation)
+        $nextId = (User::max('id') ?? 0) + 1;
+
+        // 2. إنشاء المستخدم مع تحديد الـ ID الصاعد
         $user = User::create([
+            'id'        => $nextId,
             'user_name' => $tempUser['user_name'],
-            'email' => $tempUser['email'],
-            'phone' => $tempUser['phone'],
-            'password' => Hash::make($tempUser['password']),
+            'email'     => $tempUser['email'],
+            'phone'     => $tempUser['phone'],
+            'password'  => Hash::make($tempUser['password']),
         ]);
 
-        // $user->assignRole('registered'); // تأكد أن هذه الحزمة مفعلة عندك
+        // 3. محاولة مزامنة العداد في الخلفية حتى لا نحتاج للعد اليدوي مستقبلاً
+        try {
+            DB::statement("SELECT setval('users_id_seq', $nextId)");
+        } catch (\Exception $e) {
+            \Log::warning("Could not reset sequence: " . $e->getMessage());
+        }
 
-        // حذف رمز التحقق
+        // --- نهاية الحل ---
+
         $verification->delete();
         session()->forget('temp_user');
 
-        // تسجيل الدخول تلقائياً
         auth()->login($user);
 
         return redirect()->route('home')->with('success', 'تم إنشاء الحساب بنجاح!');
     }
 
-    // إعادة إرسال الرمز
     public function resendCode()
     {
         $tempUser = session('temp_user');
@@ -139,7 +141,6 @@ class VerificationController extends Controller
             ['code' => $code, 'expires_at' => $expiresAt]
         );
 
-        // إعادة الإرسال عبر الـ API
         $this->sendEmailViaBrevo($tempUser['email'], $code, $tempUser['user_name']);
 
         return back()->with('success', 'تم إعادة إرسال رمز التحقق');

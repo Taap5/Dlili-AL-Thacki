@@ -13,7 +13,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\MyReviewController;
 use App\Http\Controllers\AdminController;
-use Illuminate\Support\Facades\DB;
+
 // الصفحة الرئيسية
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -135,14 +135,3 @@ Route::get('/emergency/nearest', [App\Http\Controllers\EmergencyController::clas
 // ===== مسارات العروض الخاصة =====
 Route::get('/offers', [App\Http\Controllers\OffersController::class, 'index'])->name('offers.index');
 Route::get('/offers/{id}', [App\Http\Controllers\OffersController::class, 'show'])->name('offers.show');
-
-
-Route::get('/fix-db', function () {
-    try {
-        // هذا الأمر يعيد ضبط عداد الـ ID في PostgreSQL ليصبح بعد أكبر ID موجود حالياً
-        DB::statement("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))");
-        return "تم إصلاح عداد قاعدة البيانات بنجاح! يمكنك التسجيل الآن.";
-    } catch (\Exception $e) {
-        return "حدث خطأ أو ربما العداد منضبط بالفعل: " . $e->getMessage();
-    }
-});
