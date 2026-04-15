@@ -135,3 +135,26 @@ Route::get('/emergency/nearest', [App\Http\Controllers\EmergencyController::clas
 // ===== مسارات العروض الخاصة =====
 Route::get('/offers', [App\Http\Controllers\OffersController::class, 'index'])->name('offers.index');
 Route::get('/offers/{id}', [App\Http\Controllers\OffersController::class, 'show'])->name('offers.show');
+
+use Illuminate\Support\Facades\DB;
+
+Route::get('/fix-all-sequences', function () {
+    try {
+        $tables = DB::select("SELECT relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind = 'r' AND n.nspname = 'public'");
+
+        foreach ($tables as $table) {
+            $tableName = $table->relname;
+            $sequenceName = "{$tableName}_id_seq";
+
+            // التحقق من وجود العداد قبل محاولة إصلاحه
+            $exists = DB::select("SELECT 1 FROM pg_class WHERE relname = '$sequenceName'");
+
+            if (!empty($exists)) {
+                DB::statement("SELECT setval('$sequenceName', (SELECT COALESCE(MAX(id), 1) FROM $tableName))");
+            }
+        }
+        return "تم إصلاح جميع عدادات جداول قاعدة البيانات بنجاح! يمكنك الحذف والإضافة الآن.";
+    } catch (\Exception $e) {
+        return "حدث خطأ أثناء الإصلاح: " . $e->getMessage();
+    }
+});
