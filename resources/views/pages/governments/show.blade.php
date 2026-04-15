@@ -540,7 +540,21 @@
                                                                     style="width: 32px; height: 32px; object-fit: contain;"
                                                                     loading="lazy">
                                                             @else
-                                                                <i class="fas fa-ambulance"></i>
+                                                                @php
+                                                                    $categoryIcons = [
+                                                                        1 => 'fa-hospital',
+                                                                        2 => 'fa-shield-alt',
+                                                                        3 => 'fa-envelope',
+                                                                        4 => 'fa-id-card',
+                                                                        5 => 'fa-passport',
+                                                                    ];
+                                                                    $catId =
+                                                                        $subService->government_category_id ??
+                                                                        ($service->government_category_id ?? 0);
+                                                                    $icon =
+                                                                        $categoryIcons[$catId] ?? 'fa-clipboard-list';
+                                                                @endphp
+                                                                <i class="fas {{ $icon }}"></i>
                                                             @endif
                                                         </div>
                                                         <div class="grid-item-name">
@@ -603,7 +617,22 @@
                                                                         style="width: 32px; height: 32px; object-fit: contain;"
                                                                         loading="lazy">
                                                                 @else
-                                                                    <i class="fas fa-ambulance"></i>
+                                                                    @php
+                                                                        $categoryIcons = [
+                                                                            1 => 'fa-hospital',
+                                                                            2 => 'fa-shield-alt',
+                                                                            3 => 'fa-envelope',
+                                                                            4 => 'fa-id-card',
+                                                                            5 => 'fa-passport',
+                                                                        ];
+                                                                        $catId =
+                                                                            $subService->government_category_id ??
+                                                                            ($service->government_category_id ?? 0);
+                                                                        $icon =
+                                                                            $categoryIcons[$catId] ??
+                                                                            'fa-clipboard-list';
+                                                                    @endphp
+                                                                    <i class="fas {{ $icon }}"></i>
                                                                 @endif
                                                             </div>
                                                             <div class="grid-item-name">
@@ -824,7 +853,20 @@
                 </div>
                 <div class="modal-body service-modal-body">
                     <div class="service-modal-icon" id="serviceModalIcon">
-                        <i class="fas fa-ambulance fa-3x"></i>
+                        @php
+                            // نأخذ أول خدمة لتحديد التصنيف (للعرض الافتراضي)
+                            $firstService = $government->services->first();
+                            $categoryIcons = [
+                                1 => 'fa-hospital',
+                                2 => 'fa-shield-alt',
+                                3 => 'fa-envelope',
+                                4 => 'fa-id-card',
+                                5 => 'fa-passport',
+                            ];
+                            $catId = $firstService->government_category_id ?? 0;
+                            $defaultIcon = $categoryIcons[$catId] ?? 'fa-clipboard-list';
+                        @endphp
+                        <i class="fas {{ $defaultIcon }} fa-3x"></i>
                     </div>
                     <h4 class="fw-bold text-center mb-4 service-modal-name" id="serviceModalName"></h4>
                     <div id="serviceModalDetails" class="service-modal-details"></div>
@@ -2469,7 +2511,7 @@
                 if (service.emergency_notes && service.emergency_notes !== 'null' && service.emergency_notes !== '') {
                     detailsHtml += `
                 <div class="info-box">
-                    <i class="fas fa-ambulance"></i>
+                    <i class="fas fa-exclamation-triangle"></i>  <!-- أيقونة تحذير -->
                     <div class="info-content">
                         <div class="info-label">🚨 ملاحظات للطوارئ</div>
                         <div class="info-value" style="white-space: pre-line;">${escapeHtml(service.emergency_notes)}</div>
@@ -2492,7 +2534,17 @@
                         modalIcon.innerHTML =
                             `<img src="/storage/${service.icon_image}" style="width: 60px; height: 60px; object-fit: contain;" loading="lazy">`;
                     } else {
-                        modalIcon.innerHTML = `<i class="fas fa-ambulance fa-3x"></i>`;
+                        // تحديد الأيقونة حسب تصنيف الخدمة
+                        const categoryIcons = {
+                            1: 'fa-hospital',
+                            2: 'fa-shield-alt',
+                            3: 'fa-envelope',
+                            4: 'fa-id-card',
+                            5: 'fa-passport',
+                        };
+                        const catId = service.government_category_id || 0;
+                        const iconClass = categoryIcons[catId] || 'fa-clipboard-list';
+                        modalIcon.innerHTML = `<i class="fas ${iconClass} fa-3x"></i>`;
                     }
                 }
 
