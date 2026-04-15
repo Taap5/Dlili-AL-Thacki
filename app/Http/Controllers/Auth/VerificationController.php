@@ -95,32 +95,45 @@ class VerificationController extends Controller
             return redirect()->route('register')->with('error', 'انتهت صلاحية الرمز، يرجى إعادة التسجيل');
         }
 
-        // --- بداية الحل الجذري لمشكلة الـ ID في PostgreSQL ---
+        // --- الحل القاطع لمشكلة الـ ID ---
 
-        // 1. حساب الـ ID التالي يدوياً لتجنب التعارض (Unique Violation)
-        $nextId = (User::max('id') ?? 0) + 1;
+        // البحث عن أول ID متاح لا يسبب تعارض
+        $idToUse = (User::max('id') ?? 0) + 1;
 
-        // 2. إنشاء المستخدم مع تحديد الـ ID الصاعد
-        $user = User::create([
-            'id'        => $nextId,
-            'user_name' => $tempUser['user_name'],
-            'email'     => $tempUser['email'],
-            'phone'     => $tempUser['phone'],
-            'password'  => Hash::make($tempUser['password']),
-        ]);
+        // سنحاول الإضافة، وإذا فشل بسبب الـ ID، سنزيد الرقم ونحاول مرة أخرى (حتى 10 محاولات)
+        $attempts = 0;
+        $user = null;
 
-        // 3. محاولة مزامنة العداد في الخلفية حتى لا نحتاج للعد اليدوي مستقبلاً
+        while ($attempts < 10) {
+            try {
+                $user = User::create([
+                    'id'        => $idToUse,
+                    'user_name' => $tempUser['user_name'],
+                    'email'     => $tempUser['email'],
+                    'phone'     => $tempUser['phone'],
+                    'password'  => Hash::make($tempUser['password']),
+                ]);
+                break; // نجحت الإضافة، اخرج من الحلقة
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                $idToUse++; // الرقم محجوز، جرب الرقم الذي يليه
+                $attempts++;
+            }
+        }
+
+        if (!$user) {
+            return back()->with('error', 'عذراً، حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً.');
+        }
+
+        // محاولة تحديث العداد للمستقبل
         try {
-            DB::statement("SELECT setval('users_id_seq', $nextId)");
+            DB::statement("SELECT setval('users_id_seq', $idToUse)");
         } catch (\Exception $e) {
-            \Log::warning("Could not reset sequence: " . $e->getMessage());
         }
 
         // --- نهاية الحل ---
 
         $verification->delete();
         session()->forget('temp_user');
-
         auth()->login($user);
 
         return redirect()->route('home')->with('success', 'تم إنشاء الحساب بنجاح!');
