@@ -72,13 +72,11 @@ class VerificationController extends Controller
 
     public function verifyCode(Request $request)
     {
-        $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
+        $request->validate(['code' => 'required|string|size:6']);
 
         $tempUser = session('temp_user');
         if (!$tempUser) {
-            return redirect()->route('register')->with('error', 'انتهت الجلسة، يرجى المحاولة مرة أخرى');
+            return redirect()->route('register')->with('error', 'انتهت الجلسة');
         }
 
         $verification = EmailVerification::where('email', $tempUser['email'])
@@ -89,54 +87,31 @@ class VerificationController extends Controller
             return back()->with('error', 'رمز التحقق غير صحيح');
         }
 
-        if ($verification->isExpired()) {
-            $verification->delete();
-            session()->forget('temp_user');
-            return redirect()->route('register')->with('error', 'انتهت صلاحية الرمز، يرجى إعادة التسجيل');
-        }
-
-        // --- الحل القاطع لمشكلة الـ ID ---
-
-        // البحث عن أول ID متاح لا يسبب تعارض
-        $idToUse = (User::max('id') ?? 0) + 1;
-
-        // سنحاول الإضافة، وإذا فشل بسبب الـ ID، سنزيد الرقم ونحاول مرة أخرى (حتى 10 محاولات)
-        $attempts = 0;
-        $user = null;
-
-        while ($attempts < 10) {
-            try {
-                $user = User::create([
-                    'id'        => $idToUse,
+        // --- الحل الذكي: التحديث أو الإنشاء ---
+        try {
+            // سنبحث عن المستخدم بالإيميل، إذا وجدناه نحدث بياناته، وإذا لم نجده ننشئه
+            // هذا سيتجاوز مشكلة "الإيميل مكرر" ومشكلة "الـ ID مكرر"
+            $user = User::updateOrCreate(
+                ['email' => $tempUser['email']], // البحث عن طريق الإيميل
+                [
                     'user_name' => $tempUser['user_name'],
-                    'email'     => $tempUser['email'],
                     'phone'     => $tempUser['phone'],
                     'password'  => Hash::make($tempUser['password']),
-                ]);
-                break; // نجحت الإضافة، اخرج من الحلقة
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                $idToUse++; // الرقم محجوز، جرب الرقم الذي يليه
-                $attempts++;
-            }
-        }
+                ]
+            );
 
-        if (!$user) {
-            return back()->with('error', 'عذراً، حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً.');
-        }
+            // حذف الرمز وتطهير الجلسة
+            $verification->delete();
+            session()->forget('temp_user');
 
-        // محاولة تحديث العداد للمستقبل
-        try {
-            DB::statement("SELECT setval('users_id_seq', $idToUse)");
+            // تسجيل الدخول
+            auth()->login($user);
+
+            return redirect()->route('home')->with('success', 'تم تسجيلك بنجاح!');
         } catch (\Exception $e) {
+            \Log::error("Final DB Error: " . $e->getMessage());
+            return back()->with('error', 'خطأ في قاعدة البيانات: ' . $e->getMessage());
         }
-
-        // --- نهاية الحل ---
-
-        $verification->delete();
-        session()->forget('temp_user');
-        auth()->login($user);
-
-        return redirect()->route('home')->with('success', 'تم إنشاء الحساب بنجاح!');
     }
 
     public function resendCode()
