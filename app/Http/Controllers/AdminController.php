@@ -179,7 +179,7 @@ class AdminController extends Controller
             'email' => $request->email,
             'whatsapp_number' => $request->whatsapp_number,
             'work_hours' => $request->work_hours,
-           'work_hours_json' => $request->work_hours_json,
+            'work_hours_json' => $request->work_hours_json,
             'location_description' => $request->location_description,
             'facebook_url' => $request->facebook_url,
             'telegram_url' => $request->telegram_url,
@@ -333,6 +333,14 @@ class AdminController extends Controller
         $governmentData['images'] = $currentImages;
         $government->update($governmentData);
 
+        // ✅ معالجة الخدمات المحذوفة أولاً
+        if ($request->has('deleted_services')) {
+            foreach ($request->deleted_services as $deletedId) {
+                $government->services()->detach($deletedId);
+            }
+        }
+
+        // ✅ ثم معالجة الخدمات الموجودة
         if ($request->has('services')) {
             $servicesData = [];
             foreach ($request->services as $serviceId => $details) {
