@@ -46,7 +46,6 @@ class Government extends Model
                 'description',
                 'contact_number',
                 'work_hours',
-
                 'price',
                 'processing_time',
                 'office_location',

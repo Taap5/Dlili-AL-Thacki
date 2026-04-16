@@ -583,27 +583,106 @@
                         @endif
 
                         <!-- Stats -->
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <i class="fas fa-building"></i>
-                                <div class="stat-number">{{ $service->governments->count() }}</div>
-                                <div class="stat-label">جهة تقدم الخدمة</div>
-                            </div>
-                            @if ($minPrice)
-                                <div class="stat-card">
-                                    <i class="fas fa-tag"></i>
-                                    <div class="stat-number">{{ number_format($minPrice) }}</div>
-                                    <div class="stat-label">ريال (أقل سعر)</div>
-                                </div>
-                            @endif
-                            @if ($avgServiceRating)
-                                <div class="stat-card">
-                                    <i class="fas fa-star"></i>
-                                    <div class="stat-number">{{ $avgServiceRating }}</div>
-                                    <div class="stat-label">متوسط التقييم</div>
-                                </div>
-                            @endif
-                        </div>
+       <!-- Stats -->
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <i class="fas fa-building"></i>
+        <div class="stat-number">{{ $service->governments->count() }}</div>
+        <div class="stat-label">جهة تقدم الخدمة</div>
+    </div>
+
+    @php
+        $priceSummary = null;
+        $priceType = 'none';
+        $extraNote = null;
+
+        foreach ($service->governments as $gov) {
+            if ($gov->pivot->price && !$priceSummary) {
+                $priceText = trim($gov->pivot->price);
+
+                // التعامل مع الأرقام التي بها فواصل (مثل 800,000)
+                // إزالة الفواصل من الأرقام مؤقتاً للمعالجة
+                $cleanText = str_replace(',', '', $priceText);
+
+                // التحقق من وجود نطاق (مثل 800000-2500000 أو 800,000 - 2,500,000)
+                if (preg_match('/(\d+)\s*[-–—]\s*(\d+)/', $cleanText, $matches)) {
+                    $minVal = (float) $matches[1];
+                    $maxVal = (float) $matches[2];
+
+                    // إعادة إضافة الفواصل للعرض
+                    $priceSummary = number_format($minVal) . ' - ' . number_format($maxVal) . ' ريال';
+                    $priceType = 'range';
+
+                    // استخراج النص الإضافي (مثل "حسب نوع العملية...")
+                    $patterns = [
+                        '/(حسب|على حسب|يختلف حسب|حالة|نوع|تجهيزات)/u'
+                    ];
+                    foreach ($patterns as $pattern) {
+                        if (preg_match($pattern, $priceText, $noteMatch)) {
+                            $extraNote = ' ' . $noteMatch[0];
+                            break;
+                        }
+                    }
+                }
+                // التحقق من وجود "من ... إلى ..."
+                elseif (preg_match('/من\s*([\d,]+)\s*إلى\s*([\d,]+)/u', $priceText, $matches)) {
+                    $minVal = (float) str_replace(',', '', $matches[1]);
+                    $maxVal = (float) str_replace(',', '', $matches[2]);
+                    $priceSummary = number_format($minVal) . ' - ' . number_format($maxVal) . ' ريال';
+                    $priceType = 'range';
+                }
+                // استخراج رقم واحد (مع أو بدون فواصل)
+                elseif (preg_match('/[\d,]+/', $priceText, $matches)) {
+                    $priceValue = (float) str_replace(',', '', $matches[0]);
+                    $priceSummary = number_format($priceValue) . ' ريال';
+                    $priceType = 'single';
+                }
+                elseif (str_contains($priceText, 'مجاني')) {
+                    $priceSummary = 'مجاني';
+                    $priceType = 'free';
+                }
+                elseif (str_contains($priceText, 'اتصل') || str_contains($priceText, 'استفسار')) {
+                    $priceSummary = 'للاستفسار';
+                    $priceType = 'call';
+                }
+            }
+        }
+    @endphp
+
+    @if ($priceSummary)
+        <div class="stat-card">
+            <i class="fas fa-tag"></i>
+            <div class="stat-number" style="@if($priceType == 'range') font-size: 0.85rem; line-height: 1.4; @endif">
+                {{ $priceSummary }}
+                @if($extraNote)
+                    <small style="display: block; font-size: 0.6rem; color: #888; margin-top: 4px;">
+                        {{ $extraNote }}
+                    </small>
+                @endif
+            </div>
+            <div class="stat-label">
+                @if($priceType == 'single')
+                    (أقل سعر)
+                @elseif($priceType == 'range')
+                    (يختلف حسب الحالة)
+                @elseif($priceSummary == 'مجاني')
+                    (بدون رسوم)
+                @elseif($priceSummary == 'للاستفسار')
+                    (اتصل بالجهة)
+                @endif
+            </div>
+        </div>
+    @endif
+
+    @if ($avgServiceRating)
+        <div class="stat-card">
+            <i class="fas fa-star"></i>
+            <div class="stat-number">{{ $avgServiceRating }}</div>
+            <div class="stat-label">متوسط التقييم</div>
+        </div>
+    @endif
+</div>
                     </div>
                     <div class="col-md-4 mt-4 mt-md-0">
                         @auth

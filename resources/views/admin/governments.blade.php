@@ -1739,21 +1739,21 @@
                             </div>
 
                             ${isHospital ? `
-                                                                                                                        <div class="row g-2 mt-2 pt-2 border-top">
-                                                                                                                            <div class="col-md-6">
-                                                                                                                                <label class="form-label small">👨‍⚕️ الطبيب/القسم المختص</label>
-                                                                                                                                <input type="text" name="services[${service.id}][doctor_specialist]" class="form-control form-control-sm" value="${escapeHtml(pivot.doctor_specialist || '')}" placeholder="مثال: د. أحمد - قسم القلب">
-                                                                                                                            </div>
-                                                                                                                            <div class="col-md-6">
-                                                                                                                                <label class="form-label small">🏥 مدة التنويم المتوقعة</label>
-                                                                                                                                <input type="text" name="services[${service.id}][hospital_stay_duration]" class="form-control form-control-sm" value="${escapeHtml(pivot.hospital_stay_duration || '')}" placeholder="مثال: 5 أيام، أسبوع">
-                                                                                                                            </div>
-                                                                                                                            <div class="col-12">
-                                                                                                                                <label class="form-label small">🚨 ملاحظات للطوارئ</label>
-                                                                                                                                <textarea name="services[${service.id}][emergency_notes]" class="form-control form-control-sm" rows="2">${escapeHtml(pivot.emergency_notes || '')}</textarea>
-                                                                                                                            </div>
-                                                                                                                        </div>
-                                                                                                                        ` : ''}
+                                                                                                                                <div class="row g-2 mt-2 pt-2 border-top">
+                                                                                                                                    <div class="col-md-6">
+                                                                                                                                        <label class="form-label small">👨‍⚕️ الطبيب/القسم المختص</label>
+                                                                                                                                        <input type="text" name="services[${service.id}][doctor_specialist]" class="form-control form-control-sm" value="${escapeHtml(pivot.doctor_specialist || '')}" placeholder="مثال: د. أحمد - قسم القلب">
+                                                                                                                                    </div>
+                                                                                                                                    <div class="col-md-6">
+                                                                                                                                        <label class="form-label small">🏥 مدة التنويم المتوقعة</label>
+                                                                                                                                        <input type="text" name="services[${service.id}][hospital_stay_duration]" class="form-control form-control-sm" value="${escapeHtml(pivot.hospital_stay_duration || '')}" placeholder="مثال: 5 أيام، أسبوع">
+                                                                                                                                    </div>
+                                                                                                                                    <div class="col-12">
+                                                                                                                                        <label class="form-label small">🚨 ملاحظات للطوارئ</label>
+                                                                                                                                        <textarea name="services[${service.id}][emergency_notes]" class="form-control form-control-sm" rows="2">${escapeHtml(pivot.emergency_notes || '')}</textarea>
+                                                                                                                                    </div>
+                                                                                                                                </div>
+                                                                                                                                ` : ''}
                         </div>
                     </div>
                 `;
@@ -1813,14 +1813,34 @@
             }
 
             function removeEditService(serviceId) {
+                // البحث عن بطاقة الخدمة
                 const serviceCard = document.querySelector(`#editServicesList .service-card[data-service-id="${serviceId}"]`);
+
                 if (serviceCard) {
+                    // ✅ إضافة input مخفي لإعلام الخادم بحذف هذه الخدمة
+                    const deletedInput = document.createElement('input');
+                    deletedInput.type = 'hidden';
+                    deletedInput.name = 'deleted_services[]';
+                    deletedInput.value = serviceId;
+                    deletedInput.classList.add('deleted-service-input');
+
+                    // إضافة الحقل إلى النموذج
+                    const editForm = document.getElementById('editForm');
+                    if (editForm) {
+                        editForm.appendChild(deletedInput);
+                    }
+
+                    // حذف البطاقة من الشاشة
                     serviceCard.remove();
                 }
+
+                // التحقق إذا لم يتبق أي خدمات
                 const remainingServices = document.querySelectorAll('#editServicesList .service-card');
                 if (remainingServices.length === 0) {
-                    document.getElementById('editServicesList').innerHTML =
-                        '<div class="alert alert-info">لا توجد خدمات مرتبطة بهذه الجهة</div>';
+                    const servicesList = document.getElementById('editServicesList');
+                    if (servicesList) {
+                        servicesList.innerHTML = '<div class="alert alert-info">لا توجد خدمات مرتبطة بهذه الجهة</div>';
+                    }
                 }
             }
 
@@ -1962,10 +1982,18 @@
                     tempServices.push(serviceData);
                     renderAddedServices();
                 } else {
+                    // ✅ التحقق من عدم وجود الخدمة مكررة (سواء موجودة أصلاً أو مضافة حديثاً أو محذوفة)
                     const existingService = document.querySelector(
                         `#editServicesList .service-card[data-service-id="${serviceId}"]`);
+                    const existingInDeleted = document.querySelector(`input[name="deleted_services[]"][value="${serviceId}"]`);
+
                     if (existingService) {
-                        alert('هذه الخدمة مضافة بالفعل');
+                        alert('⚠️ هذه الخدمة مضافة بالفعل');
+                        return;
+                    }
+
+                    if (existingInDeleted) {
+                        alert('⚠️ لا يمكن إضافة خدمة تم حذفها للتو. يرجى حفظ التغييرات أولاً ثم إضافتها مرة أخرى.');
                         return;
                     }
 
@@ -1977,85 +2005,82 @@
                     const uniqueId = `service_${serviceData.id}`;
 
                     const serviceHtml = `
-            <div class="service-card card p-3 mb-3" data-service-id="${serviceData.id}">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn-collapse-service" onclick="toggleServiceDetails('${uniqueId}')" style="background: none; border: none; cursor: pointer;">
-                            <i class="fas fa-chevron-left" id="icon_${uniqueId}"></i>
-                        </button>
-                        <h6 class="mb-0 fw-bold">${escapeHtml(serviceData.name)}</h6>
-                    </div>
-                    <button type="button" class="btn-remove-service" onclick="removeEditService(${serviceData.id})">
-                        <i class="fas fa-times"></i>
+        <div class="service-card card p-3 mb-3" data-service-id="${serviceData.id}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn-collapse-service" onclick="toggleServiceDetails('${uniqueId}')" style="background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-chevron-left" id="icon_${uniqueId}"></i>
                     </button>
+                    <h6 class="mb-0 fw-bold">${escapeHtml(serviceData.name)}</h6>
                 </div>
-                <input type="hidden" name="services[${serviceData.id}][id]" value="${serviceData.id}">
+                <button type="button" class="btn-remove-service" onclick="removeEditService(${serviceData.id})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="hidden" name="services[${serviceData.id}][id]" value="${serviceData.id}">
 
-                <div class="service-details-fields" id="details_${uniqueId}" style="display: none;">
-                    <!-- الصف الأول: الوصف ورقم الاتصال -->
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <label class="form-label small">وصف الخدمة (لهذه الجهة)</label>
-                            <textarea name="services[${serviceData.id}][description]" class="form-control form-control-sm" rows="2">${escapeHtml(serviceData.description)}</textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small">رقم الاتصال الخاص</label>
-                            <input type="text" name="services[${serviceData.id}][contact_number]" class="form-control form-control-sm" value="${escapeHtml(serviceData.contact_number)}" placeholder="مثال: 01 234 567">
+            <div class="service-details-fields" id="details_${uniqueId}" style="display: none;">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label small">وصف الخدمة (لهذه الجهة)</label>
+                        <textarea name="services[${serviceData.id}][description]" class="form-control form-control-sm" rows="2">${escapeHtml(serviceData.description)}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">رقم الاتصال الخاص</label>
+                        <input type="text" name="services[${serviceData.id}][contact_number]" class="form-control form-control-sm" value="${escapeHtml(serviceData.contact_number)}" placeholder="مثال: 01 234 567">
+                    </div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label small">ساعات العمل</label>
+                        <input type="text" name="services[${serviceData.id}][work_hours]" class="form-control form-control-sm" value="${escapeHtml(serviceData.work_hours)}" placeholder="مثال: 8ص - 2م">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">الرسوم</label>
+                        <input type="text" name="services[${serviceData.id}][price]" class="form-control form-control-sm" value="${escapeHtml(serviceData.price)}" placeholder="مثال: 5000 ريال">
+                    </div>
+                </div>
+
+                <div class="row g-2 mt-2 pt-2 border-top">
+                    <div class="col-md-6">
+                        <label class="form-label small">⏱️ مدة الإنجاز</label>
+                        <input type="text" name="services[${serviceData.id}][processing_time]" class="form-control form-control-sm" value="" placeholder="مثال: 3 أيام، أسبوع">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">📍 موقع التقديم</label>
+                        <input type="text" name="services[${serviceData.id}][office_location]" class="form-control form-control-sm" value="" placeholder="مثال: شباك 5، الدور الثاني">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">📄 الأوراق المطلوبة</label>
+                        <textarea name="services[${serviceData.id}][required_documents]" class="form-control form-control-sm" rows="3" placeholder="• أصل قيد عائلي&#10;• صورتان شخصيتان"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">📋 الإجراءات خطوة بخطوة</label>
+                        <textarea name="services[${serviceData.id}][steps]" class="form-control form-control-sm" rows="3" placeholder="1. تعبئة النموذج&#10;2. دفع الرسم"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">📜 الشروط</label>
+                        <textarea name="services[${serviceData.id}][conditions]" class="form-control form-control-sm" rows="2"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">📝 ملاحظات إضافية</label>
+                        <textarea name="services[${serviceData.id}][notes]" class="form-control form-control-sm" rows="2"></textarea>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="services[${serviceData.id}][requires_appointment]" class="form-check-input" id="appointment_edit_${serviceData.id}" value="1">
+                            <label class="form-check-label small" for="appointment_edit_${serviceData.id}">📅 يتطلب حجز مسبق</label>
                         </div>
                     </div>
-
-                    <!-- الصف الثاني: ساعات العمل والرسوم -->
-                    <div class="row g-2 mt-2">
-                        <div class="col-md-6">
-                            <label class="form-label small">ساعات العمل</label>
-                            <input type="text" name="services[${serviceData.id}][work_hours]" class="form-control form-control-sm" value="${escapeHtml(serviceData.work_hours)}" placeholder="مثال: 8ص - 2م">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small">الرسوم</label>
-                            <input type="text" name="services[${serviceData.id}][price]" class="form-control form-control-sm" value="${escapeHtml(serviceData.price)}" placeholder="مثال: 5000 ريال">
-                        </div>
-                    </div>
-
-                    <!-- الحقول الجديدة -->
-                    <div class="row g-2 mt-2 pt-2 border-top">
-                        <div class="col-md-6">
-                            <label class="form-label small">⏱️ مدة الإنجاز</label>
-                            <input type="text" name="services[${serviceData.id}][processing_time]" class="form-control form-control-sm" value="" placeholder="مثال: 3 أيام، أسبوع">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small">📍 موقع التقديم</label>
-                            <input type="text" name="services[${serviceData.id}][office_location]" class="form-control form-control-sm" value="" placeholder="مثال: شباك 5، الدور الثاني">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small">📄 الأوراق المطلوبة</label>
-                            <textarea name="services[${serviceData.id}][required_documents]" class="form-control form-control-sm" rows="3" placeholder="• أصل قيد عائلي&#10;• صورتان شخصيتان"></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small">📋 الإجراءات خطوة بخطوة</label>
-                            <textarea name="services[${serviceData.id}][steps]" class="form-control form-control-sm" rows="3" placeholder="1. تعبئة النموذج&#10;2. دفع الرسم"></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small">📜 الشروط</label>
-                            <textarea name="services[${serviceData.id}][conditions]" class="form-control form-control-sm" rows="2"></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small">📝 ملاحظات إضافية</label>
-                            <textarea name="services[${serviceData.id}][notes]" class="form-control form-control-sm" rows="2"></textarea>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-check mt-2">
-                                <input type="checkbox" name="services[${serviceData.id}][requires_appointment]" class="form-check-input" id="appointment_edit_${serviceData.id}" value="1">
-                                <label class="form-check-label small" for="appointment_edit_${serviceData.id}">📅 يتطلب حجز مسبق</label>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small">📞 رقم الحجز</label>
-                            <input type="text" name="services[${serviceData.id}][appointment_phone]" class="form-control form-control-sm" value="">
-                        </div>
+                    <div class="col-6">
+                        <label class="form-label small">📞 رقم الحجز</label>
+                        <input type="text" name="services[${serviceData.id}][appointment_phone]" class="form-control form-control-sm" value="">
                     </div>
                 </div>
             </div>
-            `;
+        </div>
+    `;
                     container.insertAdjacentHTML('beforeend', serviceHtml);
                 }
 
